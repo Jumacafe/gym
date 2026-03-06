@@ -613,7 +613,7 @@ function rExCard(ex){
  var hist=getHist(ex.name,S.data.workouts);
  var allTimeRM=hist.length?Math.max.apply(null,hist.map(function(x){return x.rm;})):0;
  var lastRef=hist.length>=1?hist[hist.length-1]:null;
- var rows='<div class="sh"><span class="sl">Serie</span><span class="sl">KG</span><span class="sl">Reps</span><span class="sl" style="text-align:center">✓</span><span class="sl"></span></div>';
+ var rows='<div class="sh"><span class="sl">Serie</span><span class="sl">KG</span><span class="sl">Reps</span><span class="sl" style="text-align:center">✓</span></div>';
  ex.sets.forEach(function(s,i){
   var thisRM=e1rm(s.weight||0,s.reps||1);
   var isPR=s.done&&allTimeRM>0&&thisRM>=allTimeRM;
@@ -622,7 +622,6 @@ function rExCard(ex){
    '<span class="sv">'+(s.weight||0)+'kg'+(isPR?'<span class="pr-badge">PR</span>':'')+'</span>'+
    '<span class="sv">×'+(s.reps||0)+'</span>'+
    '<button class="ck'+(s.done?' done':'')+'" onclick="togSet(\''+ex.id+'\','+i+')">'+(s.done?IC.check:'')+'</button>'+
-   '<button class="bism" onclick="editSetInline(\''+ex.id+'\','+i+')" style="color:#444">'+IC.edit+'</button>'+
    '</div>';
  });
  var lastRefH=lastRef?'<div style="font-size:10px;color:#3a3a3a;padding:5px 0;border-top:1px solid #1a1a1a;margin-top:6px">↺ Última sesión: '+lastRef.w+'kg × '+lastRef.r+' reps (1RM ~'+lastRef.rm+'kg)</div>':'';
@@ -635,7 +634,7 @@ function rExCard(ex){
   '</div></div>'+
   '<div style="display:flex;gap:4px;align-items:center">'+
   '<button class="btn-all" onclick="togAllSets(\''+ex.id+'\')" title="'+(allDone?'Desmarcar todo':'Marcar todo')+'">'+(allDone?IC.check+' Hecho':'☐ Todo')+'</button>'+
-  '<button class="bism" onclick="oM(\'editEx\',\''+ex.id+'\')">'+IC.edit+'</button>'+
+  '<button class="bism" onclick="openEditExSets(\''+ex.id+'\',\''+ex.name.replace(/'/g,"\\'").replace(/"/g,'&quot;')+'\',\''+ex.muscle+'\')">'+IC.edit+'</button>'+
   '<button class="bism" style="color:#FF3B3B" onclick="delEx(\''+ex.id+'\')">'+IC.trash+'</button>'+
   '</div></div>'+
   '<div class="pb"><div class="pf" style="width:'+prog+'%"></div></div>'+
@@ -824,15 +823,19 @@ function rProg(){
  var bwDiffStr=bwDiff!==null?((bwDiff>0?'+':'')+bwDiff.toFixed(1)):'';
  var bwPts=bw.slice(-10).map(function(e){return{v:e.kg,lbl:fmtS(e.date)};});
  var recsH=recs.map(function(r){return '<div class="rc"><div class="ri">'+r.ic+'</div><div><div class="rt">'+r.ti+'</div><div class="rx">'+r.tx+'</div></div></div>';}).join('');
- return '<div class="stitle">Esta Semana</div>'+
+ return rMotivation()+
+  '<div class="stitle" style="margin-top:16px">Esta Semana</div>'+
   '<div class="sg">'+
   '<div class="sc"><div class="sv2">'+ws.se+'</div><div class="sl2">Entrenos</div>'+delt(ws.se,ws.lSe)+'</div>'+
   '<div class="sc"><div class="sv2">'+ws.sets+'</div><div class="sl2">Series hechas</div>'+delt(ws.sets,ws.lSets)+'</div>'+
   '<div class="sc"><div class="sv2">'+ws.exs+'</div><div class="sl2">Ejercicios</div>'+delt(ws.exs,ws.lExs)+'</div>'+
   '</div>'+
-  '<div class="card" style="margin-bottom:12px"><div class="ct">Meta semanal</div>'+
-  '<div class="goal-row"><div class="goal-info"><div class="goal-name">Sesiones: '+ws.se+' / '+(goals.weeklySessions||4)+'</div><div class="goal-bar"><div class="goal-fill" style="width:'+goalSePct+'%"></div></div></div><div class="goal-pct">'+goalSePct+'%</div></div>'+
+  '<div class="stitle" style="margin-top:16px;margin-bottom:10px">Mis Metas</div>'+
+  '<div class="card" style="margin-bottom:12px"><div class="ct">Meta Semanal</div>'+
+  '<div class="goal-row"><div class="goal-info"><div class="goal-name">Sesiones: '+ws.se+' / '+(goals.weeklySessions||4)+'</div><div class="goal-bar"><div class="goal-fill" style="width:'+goalSePct+'%;background:'+(goalSePct>=100?'#4CAF50':'#FF3B3B')+'"></div></div></div><div class="goal-pct" style="color:'+(goalSePct>=100?'#4CAF50':'#FF3B3B')+'">'+goalSePct+'%</div></div>'+
   '<button class="bs" style="margin-top:8px;font-size:11px" onclick="oM(\'editGoals\')">✏️ Editar meta</button></div>'+
+  '<div class="card"><div class="ct">Metas Personalizadas</div>'+(goals.customGoals&&goals.customGoals.length?goals.customGoals.map(function(g,i){return '<div style="background:#1a1a1a;border-radius:10px;padding:12px;margin-bottom:8px"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px"><div style="font-family:\'Barlow Condensed\',sans-serif;font-weight:700;font-size:14px;color:#fff">'+g.name+'</div><div style="display:flex;align-items:center;gap:6px"><span style="font-size:12px;color:#555">'+(g.current||0)+'/'+g.target+' '+(g.unit||'')+'</span><button class="bism" onclick="oM(\'editCustomGoal\',{idx:'+i+'})" style="color:#555">'+IC.edit+'</button><button class="bism" onclick="delCustomGoal('+i+')" style="color:#FF3B3B">'+IC.trash+'</button></div></div><div style="display:flex;align-items:center;gap:8px"><div style="flex:1;height:8px;border-radius:4px;background:#111"><div style="height:100%;border-radius:4px;background:'+(Math.min(Math.round((g.current||0)/Math.max(g.target,1)*100),100)>=100?'#4CAF50':'#FF3B3B')+';width:'+Math.min(Math.round((g.current||0)/Math.max(g.target,1)*100),100)+'%;transition:width .3s"></div></div><span style="font-size:11px;color:'+(Math.min(Math.round((g.current||0)/Math.max(g.target,1)*100),100)>=100?'#4CAF50':'#FF3B3B')+';font-weight:700;min-width:32px;text-align:right">'+Math.min(Math.round((g.current||0)/Math.max(g.target,1)*100),100)+'%</span></div>'+(Math.min(Math.round((g.current||0)/Math.max(g.target,1)*100),100)>=100?'<div style="font-size:11px;color:#4CAF50;margin-top:6px">🎉 ¡Meta alcanzada!</div>':'')+'</div>';}).join(''):'<div style="font-size:11px;color:#555;text-align:center;padding:12px">Sin metas personalizadas</div>')+
+  '<button class="bas" style="margin-top:8px" onclick="oM(\'addCustomGoal\')">'+IC.plus+' Añadir meta personalizada</button></div>'+
   '<div class="card">'+
   '<div style="display:flex;align-items:center;justify-content:space-between">'+
   '<div><div class="ct">Racha actual</div>'+
@@ -920,22 +923,10 @@ function rMotivation(){
   '<div class="mot-a">— '+q.a+'</div>'+
   '<button class="bas" style="margin-top:12px;border-color:#3a1212" onclick="nextQuote()">✨ Nueva frase</button>'+
   '</div>'+
-  '<div class="stitle" style="font-size:16px;margin-bottom:8px">🎯 Mis Metas</div>'+
-  '<div class="card">'+
-  '<div class="goal-row"><div class="goal-info"><div class="goal-name">Sesiones semanales: '+ws.se+' / '+(goals.weeklySessions||4)+'</div><div class="goal-bar"><div class="goal-fill" style="width:'+goalSePct+'%;background:'+(goalSePct>=100?'#4CAF50':'#FF3B3B')+'"></div></div></div>'+
-  '<div class="goal-pct" style="color:'+(goalSePct>=100?'#4CAF50':'#FF3B3B')+'">'+goalSePct+'%</div></div>'+
-  '<button class="bs" style="margin-top:8px;font-size:11px" onclick="oM(\'editGoals\')">✏️ Cambiar meta</button>'+
-  '</div>'+
-  customGoalsHTML+
-  '<button class="bas" onclick="oM(\'addCustomGoal\')">'+IC.plus+' Añadir meta personalizada</button>'+
   '<div class="stitle" style="font-size:16px;margin-bottom:8px;margin-top:16px">🏆 Logros <span style="font-size:12px;color:#555;font-family:\'Barlow\',sans-serif;font-weight:400">'+unlockedCount+'/'+ACHIEVEMENTS.length+' desbloqueados</span></div>'+
   '<div style="background:#141414;border-radius:12px;padding:12px;border:1px solid #1e1e1e;margin-bottom:14px">'+
   '<div style="flex:1;height:8px;background:#111;border-radius:4px"><div style="height:100%;background:linear-gradient(90deg,#FF3B3B,#FFD700);border-radius:4px;width:'+Math.round(unlockedCount/ACHIEVEMENTS.length*100)+'%"></div></div>'+
   '</div>'+achHTML+
-  '<div style="background:#141414;border-radius:12px;padding:14px;border:1px dashed #2a2a2a;margin-top:8px;text-align:center">'+
-  '<div style="font-size:19px;margin-bottom:6px">&#x2699;&#xFE0F;</div>'+
-  '<div style="font-size:13px;color:#666;margin-bottom:8px">Configura recordatorios y ajustes en Config</div>'+
-  '<button class="bp bf" style="margin:0" onclick="gT(\'config\')">Ir a Configuracion</button>'+
   '</div>';
 }
 
@@ -1052,12 +1043,15 @@ function rModal(modal){
   // FIX: Cancel button — goes back to newTpl/editTpl without losing the draft, or closes if from calendar
   var cancelBtn=modal.ctx==='template'
    ?'<button class="bs bf" style="margin-top:6px;color:#aaa" onclick="cancelConfigEx()">← Volver (cancelar este ejercicio)</button>'
+   :modal.ctx==='calendar'
+   ?'<button class="bs bf" style="margin-top:6px;color:#aaa" onclick="closeM()">Cancelar</button>'
    :'<button class="bs bf" style="margin-top:6px;color:#aaa" onclick="closeM()">Cancelar</button>';
+  var btnText=modal.ctx==='calendar'?'✅ Guardar Series':'✅ Añadir Ejercicio';
   body='<div style="margin-bottom:14px"><span class="mtag">'+muscle+'</span></div>'+
    '<label class="il" style="margin-top:8px">SERIES CONFIGURADAS</label>'+
    '<div style="max-height:360px;overflow-y:auto;margin-bottom:14px;padding:2px 0">'+seriesList+'</div>'+
    '<button class="bas" style="width:100%;margin-bottom:14px;color:#FF3B3B" onclick="addCS()">+ Agregar serie</button>'+
-   '<button class="bp bf" onclick="saveCE(\''+modal.ctx+'\')">✅ Añadir Ejercicio</button>'+cancelBtn;
+   '<button class="bp bf" onclick="saveCE(\''+modal.ctx+'\',\''+modal.exId+'\')">'+btnText+'</button>'+cancelBtn;
  }
  if(modal.type==='editEx'){
   var ex=(S.data.workouts[S.sel]||[]).filter(function(e){return e.id===modal.id;})[0];
@@ -1073,16 +1067,6 @@ function rModal(modal){
    '<div id="erows">'+rows+'</div>'+
    '<button class="bas" onclick="addER()">'+IC.plus+' Añadir serie</button>'+
    '<button class="bp bf" onclick="saveEE(\''+ex.id+'\')">Guardar Cambios</button>';
- }
- if(modal.type==='editSetInline'){
-  var exI=(S.data.workouts[S.sel]||[]).filter(function(e){return e.id===modal.exId;})[0];
-  if(!exI||!exI.sets[modal.setIdx]){closeM();return '';}
-  var si=exI.sets[modal.setIdx];
-  title='Serie '+(modal.setIdx+1)+' · '+exI.name;
-  body='<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">'+
-   '<div><label class="il">Peso (kg)</label><input class="si" type="number" inputmode="decimal" min="0" id="inl-w" value="'+(si.weight||0)+'" style="font-size:22px;padding:14px"/></div>'+
-   '<div><label class="il">Repeticiones</label><input class="si" type="number" inputmode="numeric" min="0" id="inl-r" value="'+(si.reps||0)+'" style="font-size:22px;padding:14px"/></div>'+
-   '</div><button class="bp bf" onclick="saveInlineSet(\''+modal.exId+'\','+modal.setIdx+')">Guardar</button>';
  }
  if(modal.type==='applyTpl'){
   title='Aplicar Rutina';
@@ -1322,7 +1306,7 @@ window.rmCS=function(i){
   st({modal:S.modal});
  }
 };
-window.saveCE=function(ctx){
+window.saveCE=function(ctx,exId){
  var sets=window._cs.map(function(s){return{weight:parseFloat(s.w)||0,reps:parseInt(s.r)||0,done:false};});
  
  // VALIDACION: No permitir 0kg o 0reps
@@ -1331,13 +1315,26 @@ window.saveCE=function(ctx){
  
  var modal=S.modal;
  if(ctx==='calendar'){
-  var d=JSON.parse(JSON.stringify(S.data));
-  d.workouts[S.sel]=d.workouts[S.sel]||[];
-  if(d.workouts[S.sel].some(function(e){return e.name===modal.name;})){tst('⚠️ Ese ejercicio ya está en el entreno');st({modal:null});return;}
-  var ex={id:uid(),name:modal.name,muscle:modal.muscle,dbId:modal.dbId,sets:sets};
-  d.workouts[S.sel].push(ex);
-  sv(d);S.data=d;
-  st({data:d,modal:null});tst('✅ Ejercicio añadido');
+  if(exId){
+   // EDITAR ejercicio existente
+   var d=JSON.parse(JSON.stringify(S.data));
+   d.workouts[S.sel]=(d.workouts[S.sel]||[]).map(function(ex){
+    if(ex.id!==exId)return ex;
+    return Object.assign({},ex,{sets:sets});
+   });
+   sv(d);S.data=d;
+   st({data:d,modal:null});
+   tst('✅ Series guardadas');
+  } else {
+   // CREAR ejercicio nuevo
+   var d=JSON.parse(JSON.stringify(S.data));
+   d.workouts[S.sel]=d.workouts[S.sel]||[];
+   if(d.workouts[S.sel].some(function(e){return e.name===modal.name;})){tst('⚠️ Ese ejercicio ya está en el entreno');st({modal:null});return;}
+   var ex={id:uid(),name:modal.name,muscle:modal.muscle,dbId:modal.dbId,sets:sets};
+   d.workouts[S.sel].push(ex);
+   sv(d);S.data=d;
+   st({data:d,modal:null});tst('✅ Ejercicio añadido');
+  }
  } else if(ctx==='template'){
   if(S.tplDraft.exercises.some(function(e){return e.name===modal.name;})){tst('⚠️ Ese ejercicio ya está en la rutina');st({modal:{type:S.tplDraft.id?'editTpl':'newTpl',id:S.tplDraft.id}});return;}
   S.tplDraft.exercises.push({name:modal.name,muscle:modal.muscle,dbId:modal.dbId,sets:sets});
@@ -1389,16 +1386,11 @@ window.delEx=function(id){
  d.workouts[S.sel]=(d.workouts[S.sel]||[]).filter(function(e){return e.id!==id;});
  st({data:d});tst('Ejercicio eliminado');
 };
-window.editSetInline=function(exId,setIdx){st({modal:{type:'editSetInline',exId:exId,setIdx:setIdx}});};
-window.saveInlineSet=function(exId,setIdx){
- var w=parseFloat(document.getElementById('inl-w')?document.getElementById('inl-w').value:0)||0;
- var r=parseInt(document.getElementById('inl-r')?document.getElementById('inl-r').value:0)||0;
- var d=JSON.parse(JSON.stringify(S.data));
- d.workouts[S.sel]=(d.workouts[S.sel]||[]).map(function(ex){
-  if(ex.id!==exId)return ex;
-  return Object.assign({},ex,{sets:ex.sets.map(function(s,i){return i===setIdx?Object.assign({},s,{weight:w,reps:r}):s;})});
- });
- st({data:d,modal:null});tst('Serie actualizada');
+window.openEditExSets=function(exId,name,muscle){
+ var ex=(S.data.workouts[S.sel]||[]).filter(function(e){return e.id===exId;})[0];
+ if(!ex){tst('Ejercicio no encontrado');return;}
+ window._cs=ex.sets.map(function(s){return{w:s.weight||'',r:s.reps||''};});
+ st({modal:{type:'configEx',name:name,muscle:muscle,dbId:ex.dbId,ctx:'calendar',exId:exId}});
 };
 window.bulkKg=function(exId){
  var inp=document.getElementById('bk-'+exId);
