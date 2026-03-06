@@ -526,6 +526,7 @@ var IC={
  mot:'<svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>',
  back:'<svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M19 12H5M12 5l-7 7 7 7"/></svg>',
  export:'<svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg>',
+ import:'<svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M17 8l-5-5-5 5M12 3v12"/></svg>',
 };
 // ══ RENDER ══
 function render(){
@@ -541,6 +542,7 @@ function render(){
  app.innerHTML=
   '<div class="hdr"><div><div class="logo">IRON<span>LOG</span></div><div class="logo-sub">Gym Tracker</div></div>'+
   '<div class="hdr-right">'+
+  '<button class="bs" style="padding:5px 10px;font-size:11px;gap:4px" onclick="importData()">'+IC.import+' Import</button>'+
   '<button class="bs" style="padding:5px 10px;font-size:11px;gap:4px" onclick="exportData()">'+IC.export+' Export</button>'+
   '<div class="sbadge" onclick="gT(\'motivation\')">🔥 '+streak+' día'+(streak!==1?'s':'')+'</div></div></div>'+
   '<div class="content">'+(
@@ -940,22 +942,46 @@ function rModal(modal){
   body='<input class="ps" type="text" placeholder="🔍  Buscar..." value="'+q+'" oninput="setPF(\'q\',this.value)"/>'+
    '<div class="mc">'+chips+'</div><div class="el">'+(items||'<p style="color:#444;text-align:center;padding:16px">Sin resultados</p>')+'</div>';
  }
- if(modal.type==='configEx'){
-  var name=modal.name,muscle=modal.muscle;
-  title=name;
+ if(modal.type==='editTplEx'){
+  var name=modal.name,muscle=modal.muscle,exIdx=modal.exIdx;
+  title='Editar series: '+name;
+  // FIX: same no-render oninput pattern as configEx
   var seriesList=window._cs.map(function(x,i){
    return '<div class="series-row" style="display:grid;grid-template-columns:40px 1fr 1fr 40px;gap:8px;align-items:center;padding:12px;background:#1a1a1a;border-radius:8px;border:1px solid #2a2a2a;margin-bottom:8px">'+
     '<div style="text-align:center;font-size:11px;color:#555;font-weight:600">S'+(i+1)+'</div>'+
-    '<div><label style="display:block;font-size:9px;color:#555;margin-bottom:3px;text-transform:uppercase;letter-spacing:.5px">Kg</label><input type="number" min="0.1" step="0.1" placeholder="0" value="'+(x.w||'')+'" onchange="_cs['+i+'].w=parseFloat(this.value)||0;render()" onkeyup="_cs['+i+'].w=parseFloat(this.value)||0" style="background:#0d0d0d;border:1px solid #2a2a2a;border-radius:6px;padding:6px;color:#eee;font-size:13px;width:100%;text-align:center;outline:none"/></div>'+
-    '<div><label style="display:block;font-size:9px;color:#555;margin-bottom:3px;text-transform:uppercase;letter-spacing:.5px">Reps</label><input type="number" min="1" placeholder="0" value="'+(x.r||'')+'" onchange="_cs['+i+'].r=parseInt(this.value)||0;render()" onkeyup="_cs['+i+'].r=parseInt(this.value)||0" style="background:#0d0d0d;border:1px solid #2a2a2a;border-radius:6px;padding:6px;color:#eee;font-size:13px;width:100%;text-align:center;outline:none"/></div>'+
+    '<div><label style="display:block;font-size:9px;color:#555;margin-bottom:3px;text-transform:uppercase;letter-spacing:.5px">Kg</label><input type="number" inputmode="decimal" min="0.1" step="0.1" placeholder="0" value="'+(x.w||'')+'" oninput="_cs['+i+'].w=parseFloat(this.value)||0" style="background:#0d0d0d;border:1px solid #2a2a2a;border-radius:6px;padding:6px;color:#eee;font-size:13px;width:100%;text-align:center;outline:none"/></div>'+
+    '<div><label style="display:block;font-size:9px;color:#555;margin-bottom:3px;text-transform:uppercase;letter-spacing:.5px">Reps</label><input type="number" inputmode="numeric" min="1" placeholder="0" value="'+(x.r||'')+'" oninput="_cs['+i+'].r=parseInt(this.value)||0" style="background:#0d0d0d;border:1px solid #2a2a2a;border-radius:6px;padding:6px;color:#eee;font-size:13px;width:100%;text-align:center;outline:none"/></div>'+
     '<button class="bi" onclick="rmCS('+i+')" style="color:#FF3B3B;padding:6px;justify-content:center">'+IC.trash+'</button>'+
     '</div>';
   }).join('');
   body='<div style="margin-bottom:14px"><span class="mtag">'+muscle+'</span></div>'+
    '<label class="il" style="margin-top:8px">SERIES CONFIGURADAS</label>'+
-   '<div style="max-height:400px;overflow-y:auto;margin-bottom:14px;padding:2px 0">'+seriesList+'</div>'+
+   '<div style="max-height:360px;overflow-y:auto;margin-bottom:14px;padding:2px 0">'+seriesList+'</div>'+
    '<button class="bas" style="width:100%;margin-bottom:14px;color:#FF3B3B" onclick="addCS()">+ Agregar serie</button>'+
-   '<button class="bp bf" onclick="saveCE(\''+modal.ctx+'\')">✅ Añadir Ejercicio</button>';
+   '<button class="bp bf" onclick="saveTplExEdit('+exIdx+')">✅ Guardar Series</button>'+
+   '<button class="bs bf" style="margin-top:6px;color:#aaa" onclick="cancelConfigEx()">← Volver sin guardar</button>';
+ }
+ if(modal.type==='configEx'){
+  var name=modal.name,muscle=modal.muscle;
+  title=name;
+  // FIX: oninput ONLY saves to _cs[i] — NO render() call, so modal never jumps/resets while typing
+  var seriesList=window._cs.map(function(x,i){
+   return '<div class="series-row" style="display:grid;grid-template-columns:40px 1fr 1fr 40px;gap:8px;align-items:center;padding:12px;background:#1a1a1a;border-radius:8px;border:1px solid #2a2a2a;margin-bottom:8px">'+
+    '<div style="text-align:center;font-size:11px;color:#555;font-weight:600">S'+(i+1)+'</div>'+
+    '<div><label style="display:block;font-size:9px;color:#555;margin-bottom:3px;text-transform:uppercase;letter-spacing:.5px">Kg</label><input type="number" inputmode="decimal" min="0.1" step="0.1" placeholder="0" value="'+(x.w||'')+'" oninput="_cs['+i+'].w=parseFloat(this.value)||0" style="background:#0d0d0d;border:1px solid #2a2a2a;border-radius:6px;padding:6px;color:#eee;font-size:13px;width:100%;text-align:center;outline:none"/></div>'+
+    '<div><label style="display:block;font-size:9px;color:#555;margin-bottom:3px;text-transform:uppercase;letter-spacing:.5px">Reps</label><input type="number" inputmode="numeric" min="1" placeholder="0" value="'+(x.r||'')+'" oninput="_cs['+i+'].r=parseInt(this.value)||0" style="background:#0d0d0d;border:1px solid #2a2a2a;border-radius:6px;padding:6px;color:#eee;font-size:13px;width:100%;text-align:center;outline:none"/></div>'+
+    '<button class="bi" onclick="rmCS('+i+')" style="color:#FF3B3B;padding:6px;justify-content:center">'+IC.trash+'</button>'+
+    '</div>';
+  }).join('');
+  // FIX: Cancel button — goes back to newTpl/editTpl without losing the draft, or closes if from calendar
+  var cancelBtn=modal.ctx==='template'
+   ?'<button class="bs bf" style="margin-top:6px;color:#aaa" onclick="cancelConfigEx()">← Volver (cancelar este ejercicio)</button>'
+   :'<button class="bs bf" style="margin-top:6px;color:#aaa" onclick="closeM()">Cancelar</button>';
+  body='<div style="margin-bottom:14px"><span class="mtag">'+muscle+'</span></div>'+
+   '<label class="il" style="margin-top:8px">SERIES CONFIGURADAS</label>'+
+   '<div style="max-height:360px;overflow-y:auto;margin-bottom:14px;padding:2px 0">'+seriesList+'</div>'+
+   '<button class="bas" style="width:100%;margin-bottom:14px;color:#FF3B3B" onclick="addCS()">+ Agregar serie</button>'+
+   '<button class="bp bf" onclick="saveCE(\''+modal.ctx+'\')">✅ Añadir Ejercicio</button>'+cancelBtn;
  }
  if(modal.type==='editEx'){
   var ex=(S.data.workouts[S.sel]||[]).filter(function(e){return e.id===modal.id;})[0];
@@ -1020,10 +1046,23 @@ function rModal(modal){
  }
  if(modal.type==='editGoals'){
   var goals=S.data.goals||{};
-  title='Meta Semanal';
-  body='<label class="il">Sesiones por semana</label>'+
+  var rem=S.data.reminders||{};
+  var remDays=['Lun','Mar','Mié','Jue','Vie','Sab','Dom'].map(function(d,i){
+   var isOn=rem.days&&rem.days.includes(i+1);
+   return '<button class="mch'+(isOn?' on':'')+'" onclick="toggleRemDay('+(i+1)+')" style="'+(isOn?'background:#FF3B3B;border-color:#FF3B3B;color:#fff':'')+'">'+d+'</button>';
+  }).join('');
+  title='Metas y Recordatorios';
+  body='<div class="ct" style="margin-bottom:10px">META SEMANAL</div>'+
+   '<label class="il">Sesiones por semana</label>'+
    '<input class="si" type="number" inputmode="numeric" min="1" max="7" id="gsessions" value="'+(goals.weeklySessions||4)+'" style="margin-bottom:14px;font-size:24px;padding:14px"/>'+
-   '<button class="bp bf" onclick="saveGoals()">Guardar Meta</button>';
+   '<button class="bp bf" onclick="saveGoals()">✅ Guardar Meta</button>'+
+   '<div class="ct" style="margin-top:20px;margin-bottom:10px">RECORDATORIOS DE ENTRENAMIENTO</div>'+
+   '<div style="background:#1a0808;border:1px solid #3a1212;border-radius:12px;padding:12px;margin-bottom:14px">'+
+   '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">'+
+   '<div><div style="font-size:13px;color:#fff;margin-bottom:3px">Notificaciones</div><div style="font-size:10px;color:#555">Recibe recordatorios</div></div>'+
+   '<div class="tgl'+(rem.enabled?' on':'')+'" onclick="toggleReminder()" style="width:44px;height:26px;background:'+(rem.enabled?'#FF3B3B':'#1e1e1e')+';border-radius:13px;border:1px solid '+(rem.enabled?'#FF3B3B':'#2a2a2a')+';cursor:pointer;position:relative;transition:background .3s;display:flex;align-items:center;padding:2px"><span style="position:absolute;width:22px;height:22px;background:#fff;border-radius:11px;top:1px;left:'+(rem.enabled?'21px':'1px')+';transition:left .3s"></span></div>'+
+   '</div>'+
+   (rem.enabled?'<div><label class="il" style="margin-bottom:8px">HORA ('+window.getTimezone()+')</label><input type="time" value="'+(rem.time||'06:00')+'" onchange="setRemTime(this.value)" style="background:#1a1a1a;border:1px solid #2a2a2a;border-radius:9px;padding:10px 13px;color:#eee;font-size:14px;font-family:\'Barlow\',sans-serif;outline:none;width:100%;margin-bottom:12px"/><label class="il">DÍAS</label><div style="display:flex;flex-wrap:wrap;gap:6px">'+remDays+'</div></div>':'<div style="font-size:11px;color:#555;text-align:center;padding:8px;background:#0d0d0d;border-radius:6px">Activa recordatorios para recibir notificaciones</div>');
  }
  if(modal.type==='logWeight'){
   var bw=S.data.bodyWeight||[];
@@ -1067,23 +1106,21 @@ function rModal(modal){
 }
 
 function rTEB(e,i){
+ // FIX: No inline inputs — show series summary + Edit button only. Editing opens configEx-style flow.
  var setsArr=Array.isArray(e.sets)?e.sets:[].concat(Array.from({length:e.sets||3},function(){return {weight:e.weight||0,reps:e.reps||10};}));
- var activeTab=(S.tplDraft._activeSets&&S.tplDraft._activeSets[i])||0;
- var tabs=setsArr.map(function(s,si){return '<button onclick="texSetTab('+i+','+si+')" style="min-width:44px;padding:6px 4px;border:none;border-bottom:2px solid '+(si===activeTab?'#FF3B3B':'transparent')+';background:none;color:'+(si===activeTab?'#FF3B3B':'#555')+';font-family:\'Barlow Condensed\',sans-serif;font-weight:700;font-size:12px;cursor:pointer;flex-shrink:0">S'+(si+1)+'</button>';}).join('');
- var cs=setsArr[activeTab]||{weight:0,reps:0};
+ var seriesSummary=setsArr.map(function(s,si){
+  return '<span style="display:inline-block;background:#111;border-radius:5px;padding:3px 8px;font-size:11px;color:#ccc;font-family:\'Barlow Condensed\',sans-serif;font-weight:600;margin:2px">S'+(si+1)+': '+(s.weight||0)+'kg × '+(s.reps||0)+'</span>';
+ }).join('');
  return '<div class="teb" id="tex-'+i+'">'+
-  '<div style="display:flex;gap:7px;align-items:center;margin-bottom:8px">'+
-  '<div style="flex:1"><div style="font-family:\'Barlow Condensed\',sans-serif;font-weight:700;font-size:14px;color:#fff">'+(e.name||'Ejercicio')+'</div>'+
-  '<div style="font-size:10px;color:#555">'+(e.muscle||'')+' · '+setsArr.length+' serie'+(setsArr.length!==1?'s':'')+'</div></div>'+
-  '<button class="bism" style="color:#FF3B3B" onclick="rmTex('+i+')">'+IC.trash+'</button>'+
+  '<div style="display:flex;gap:7px;align-items:center;margin-bottom:6px">'+
+  '<div style="flex:1">'+
+   '<div style="font-family:\'Barlow Condensed\',sans-serif;font-weight:700;font-size:14px;color:#fff">'+(e.name||'Ejercicio')+'</div>'+
+   '<div style="font-size:10px;color:#555;margin-top:1px">'+(e.muscle||'')+' · '+setsArr.length+' serie'+(setsArr.length!==1?'s':'')+'</div>'+
   '</div>'+
-  '<div style="display:flex;border-bottom:1px solid #222;margin-bottom:12px;overflow-x:auto">'+tabs+
-  '<button onclick="texAddSet('+i+')" style="min-width:32px;padding:6px;border:none;border-bottom:2px solid transparent;background:none;color:#444;font-size:16px;cursor:pointer">+</button></div>'+
-  '<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:8px">'+
-  '<div><div class="tel">Peso (kg)</div><input class="si" type="number" inputmode="decimal" min="0" value="'+(cs.weight||0)+'" style="text-align:center;font-size:18px" oninput="draftExSetField('+i+','+activeTab+',\'weight\',this.value)"/></div>'+
-  '<div><div class="tel">Repeticiones</div><input class="si" type="number" inputmode="numeric" min="0" value="'+(cs.reps||0)+'" style="text-align:center;font-size:18px" oninput="draftExSetField('+i+','+activeTab+',\'reps\',this.value)"/></div>'+
+  '<button class="bp" style="padding:5px 10px;font-size:11px" onclick="openTplExEdit('+i+')">'+IC.edit+' Editar</button>'+
+  '<button class="bism" style="color:#FF3B3B;margin-left:4px" onclick="rmTex('+i+')">'+IC.trash+'</button>'+
   '</div>'+
-  (setsArr.length>1?'<button class="bas" style="font-size:11px;color:#FF3B3B;border-color:#3a1212;padding:5px 8px" onclick="texRmSet('+i+','+activeTab+')">'+IC.trash+' Quitar S'+(activeTab+1)+'</button>':'')+
+  '<div style="display:flex;flex-wrap:wrap;gap:2px;margin-top:2px">'+seriesSummary+'</div>'+
   '</div>';
 }
 // ══ ACTIONS ══
@@ -1165,9 +1202,46 @@ window.texRmSet=function(exIdx,setIdx){
  S.tplDraft._activeSets[exIdx]=Math.min(setIdx,ex.sets.length-1);render();
 };
 
+// FIX: Cancel from configEx — goes back to newTpl/editTpl without losing draft
+window.cancelConfigEx=function(){
+ st({modal:{type:S.tplDraft.id?'editTpl':'newTpl',id:S.tplDraft.id}});
+};
+// FIX: Edit series for an already-added template exercise (opens configEx-style with that exercise's data)
+window.openTplExEdit=function(exIdx){
+ var ex=S.tplDraft.exercises[exIdx];
+ if(!ex)return;
+ var setsArr=Array.isArray(ex.sets)?ex.sets:[].concat(Array.from({length:ex.sets||3},function(){return{weight:ex.weight||0,reps:ex.reps||10};}));
+ window._cs=setsArr.map(function(s){return{w:s.weight||0,r:s.reps||0};});
+ // Store which exercise we're editing
+ window._editTplExIdx=exIdx;
+ st({modal:{type:'editTplEx',name:ex.name,muscle:ex.muscle,exIdx:exIdx}});
+};
+// FIX: Save edited series back to tplDraft
+window.saveTplExEdit=function(exIdx){
+ var sets=window._cs.map(function(s){return{weight:parseFloat(s.w)||0,reps:parseInt(s.r)||0,done:false};});
+ var hasInvalid=sets.some(function(s){return s.weight<=0||s.reps<=0;});
+ if(hasInvalid){tst('❌ No puedes dejar series con 0kg o 0 reps');return;}
+ var ex=S.tplDraft.exercises[exIdx];
+ if(!ex){tst('Error: ejercicio no encontrado');return;}
+ ex.sets=sets;
+ st({modal:{type:S.tplDraft.id?'editTpl':'newTpl',id:S.tplDraft.id}});
+ tst('✅ Series actualizadas');
+};
 window.pickEx=function(dbId,name,muscle){
- window._cs=[{w:'',r:''},{w:'',r:''},{w:'',r:''}];
  var ctx=window._ctx;
+ // FIX: Check duplicate BEFORE opening configEx (not just at saveCE)
+ if(ctx.ctx==='calendar'){
+  if((S.data.workouts[S.sel]||[]).some(function(e){return e.name===name;})){
+   tst('⚠️ "'+name+'" ya está en el entreno de hoy');
+   return;
+  }
+ } else if(ctx.ctx==='template'){
+  if(S.tplDraft.exercises.some(function(e){return e.name===name;})){
+   tst('⚠️ "'+name+'" ya está en la rutina');
+   return;
+  }
+ }
+ window._cs=[{w:'',r:''},{w:'',r:''},{w:'',r:''}];
  st({modal:{type:'configEx',name:name,muscle:muscle,dbId:dbId,ctx:ctx.ctx||'calendar',activeSet:0}});
 };
 window.openPickerForTemplate=function(){
@@ -1420,15 +1494,49 @@ window.getTimezone=function(){
  }
 };
 window.toggleReminder=function(){
- var d=JSON.parse(JSON.stringify(S.data));
- d.reminders=d.reminders||{};
- d.reminders.enabled=!d.reminders.enabled;
- d.reminders.timezone=window.getTimezone();
- if(d.reminders.enabled&&'Notification' in window){
-  Notification.requestPermission().then(function(p){if(p==='granted')tst('🔔 Notificaciones activadas ('+d.reminders.timezone+')');else tst('⚠️ Permite notificaciones en tu navegador');});
+ if(!('Notification' in window)){
+  tst('⚠️ Tu navegador no soporta notificaciones');
+  return;
  }
- sv(d);S.data=d;
- st({data:d});
+ 
+ // Si está deshabilitado, pedimos permisos ANTES de activar
+ if(!S.data.reminders.enabled){
+  if(Notification.permission==='granted'){
+   // Permisos ya dados, simplemente activa
+   var d=JSON.parse(JSON.stringify(S.data));
+   d.reminders=d.reminders||{};
+   d.reminders.enabled=true;
+   d.reminders.timezone=window.getTimezone();
+   sv(d);S.data=d;
+   st({data:d});
+   tst('✅ Recordatorios activados ('+window.getTimezone()+')');
+  }else if(Notification.permission==='denied'){
+   tst('⚠️ Notificaciones bloqueadas. Actívalas en Configuración del navegador');
+  }else{
+   // Pide permisos
+   Notification.requestPermission().then(function(p){
+    if(p==='granted'){
+     var d=JSON.parse(JSON.stringify(S.data));
+     d.reminders=d.reminders||{};
+     d.reminders.enabled=true;
+     d.reminders.timezone=window.getTimezone();
+     sv(d);S.data=d;
+     st({data:d});
+     tst('✅ Recordatorios activados ('+window.getTimezone()+')');
+    }else if(p==='denied'){
+     tst('⚠️ Notificaciones bloqueadas. Actívalas en Configuración');
+    }
+   });
+  }
+ }else{
+  // Simplemente desactiva
+  var d=JSON.parse(JSON.stringify(S.data));
+  d.reminders=d.reminders||{};
+  d.reminders.enabled=false;
+  sv(d);S.data=d;
+  st({data:d});
+  tst('⏸️ Recordatorios desactivados');
+ }
 };
 window.toggleRemDay=function(i){
  var d=JSON.parse(JSON.stringify(S.data));
@@ -1454,12 +1562,45 @@ window.exportData=function(){
   a.click();URL.revokeObjectURL(url);tst('✅ Datos exportados');
  }catch(e){tst('Error al exportar');}
 };
+window.importData=function(){
+ // Create a hidden file input, trigger it, read the JSON and restore state
+ var inp=document.createElement('input');
+ inp.type='file';inp.accept='.json,application/json';
+ inp.onchange=function(ev){
+  var file=ev.target.files[0];
+  if(!file){return;}
+  var reader=new FileReader();
+  reader.onload=function(e){
+   try{
+    var parsed=JSON.parse(e.target.result);
+    // Validate minimal structure
+    if(typeof parsed!=='object'||!parsed.workouts){tst('❌ Archivo inválido: no parece un backup de IronLog');return;}
+    // Merge missing fields with defaults so old backups still work
+    var def=defaultData();
+    if(!parsed.customExercises)parsed.customExercises=def.customExercises;
+    if(!parsed.bodyWeight)parsed.bodyWeight=def.bodyWeight;
+    if(!parsed.workoutNotes)parsed.workoutNotes=def.workoutNotes;
+    if(!parsed.goals)parsed.goals=def.goals;
+    if(!parsed.goals.customGoals)parsed.goals.customGoals=[];
+    if(!parsed.reminders)parsed.reminders=def.reminders;
+    if(!parsed.settings)parsed.settings=def.settings;
+    if(!parsed.templates)parsed.templates=[];
+    sv(parsed);S.data=parsed;
+    st({data:parsed,modal:null});
+    tst('✅ Datos importados correctamente');
+   }catch(err){tst('❌ Error al leer el archivo: '+err.message);}
+  };
+  reader.readAsText(file);
+ };
+ inp.click();
+};
 
 // ══ REMINDER CHECK SYSTEM ══
 window.setupReminders=function(){
  if(window.reminderCheckInterval)clearInterval(window.reminderCheckInterval);
  if(!S.data.reminders.enabled){return;}
  if(!('Notification' in window)){return;}
+ if(Notification.permission!=='granted'){return;}
  
  window.reminderCheckInterval=setInterval(function(){
   var now=new Date();
@@ -1469,19 +1610,21 @@ window.setupReminders=function(){
   var cwd=now.getDay();if(cwd===0)cwd=7;
   var today=dk(now);
   
-  if(S.data.reminders.time===ct&&S.data.reminders.days.includes(cwd)&&(!S.data.reminders.lastNotified||S.data.reminders.lastNotified[today]!==ct)){
-   if(Notification.permission==='granted'){
+  if(S.data.reminders.time===ct&&S.data.reminders.days.includes(cwd)){
+   var lastNotified=S.data.reminders.lastNotified||{};
+   if(!lastNotified[today]||lastNotified[today]!==ct){
     new Notification('🏋️ ¡Hora de entrenar!',{
-     body:'Tu sesión de entrenamiento te espera - '+window.getTimezone(),
-     tag:'ironlog-reminder',
-     requireInteraction:true
+     body:'Tu sesión de entrenamiento te espera\n'+window.getTimezone(),
+     tag:'ironlog-reminder-'+today,
+     requireInteraction:true,
+     icon:'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><rect fill="%23FF3B3B" width="100" height="100"/><text x="50" y="70" font-size="60" text-anchor="middle" fill="white">💪</text></svg>'
     });
-    S.data.reminders.lastNotified=S.data.reminders.lastNotified||{};
+    S.data.reminders.lastNotified=lastNotified;
     S.data.reminders.lastNotified[today]=ct;
     sv(S.data);
    }
   }
- },30000);
+ },10000);
 };
 
 // ══ TIMER SYSTEM MEJORADO ══
