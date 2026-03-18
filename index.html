@@ -1123,7 +1123,7 @@ function rModal(modal){
    '</div>';}).join('');
   title='Peso Corporal';
   body='<label class="il">Peso de hoy (kg)</label>'+
-   '<input class="si" type="number" inputmode="decimal" min="30" max="300" id="bwkg" value="'+(lastw?lastw.kg:'')+'" placeholder="Ej: 78.5" style="font-size:24px;padding:14px;margin-bottom:14px"/>'+
+   '<input class="si" type="text" inputmode="decimal" id="bwkg" value="'+(lastw?lastw.kg:'')+'" placeholder="Ej: 78.5" style="font-size:24px;padding:14px;margin-bottom:14px"/>'+
    '<button class="bp bf" onclick="saveBodyWeight()">Guardar</button>'+
    (bw.length?'<div style="margin-top:16px"><div class="ct" style="margin-bottom:8px">Últimos registros</div>'+histRows+'</div>':'');
  }
@@ -1561,7 +1561,9 @@ window.delCustomGoal=function(i){
  st({data:d});tst('Meta eliminada');
 };
 window.saveBodyWeight=function(){
- var kg=parseFloat(document.getElementById('bwkg')?document.getElementById('bwkg').value:0)||0;
+ var rawVal=document.getElementById('bwkg')?document.getElementById('bwkg').value:'0';
+ var normalizedVal=rawVal.replace(',','.');
+ var kg=parseFloat(normalizedVal)||0;
  if(kg<30||kg>300){tst('Introduce un peso válido (30-300kg)');return;}
  var today=dk(new Date());
  var d=cd();
