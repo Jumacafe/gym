@@ -555,6 +555,18 @@ function render(){
  var app=document.getElementById('app');
  var tab=S.tab,sel=S.sel,data=S.data,modal=S.modal,toast=S.toast;
  var workout=data.workouts[sel]||[];
+var _activeEl = document.activeElement;
+var _focusSave = null;
+if (_activeEl && _activeEl.id &&
+    (_activeEl.tagName === 'INPUT' || _activeEl.tagName === 'TEXTAREA')) {
+  _focusSave = {
+    id: _activeEl.id,
+    ss: _activeEl.selectionStart,
+    se: _activeEl.selectionEnd
+  };
+}
+var _contentEl = app.querySelector('.content');
+var _savedScroll = _contentEl ? _contentEl.scrollTop : 0;
  _cachedStreak=calcStreak(data.workouts);
  var restHTML='';
  if(S.restTimer){
@@ -580,6 +592,19 @@ function render(){
   '<button class="nb '+(tab==='motivation'?'on':'')+' " onclick="gT(\'motivation\')">'+IC.mot+'<span class="nl">Metas</span></button>'+
   '<button class="nb '+(tab==='config'?'on':'')+' " onclick="gT(\'config\')">'+IC.gear+'<span class="nl">Config</span></button>'+
   '</nav>'+restHTML+(modal?rModal(modal):'')+(toast?'<div class="toast">'+toast+'</div>':'');
+  var _newContent = app.querySelector('.content');
+if (_newContent && _savedScroll > 0) {
+  _newContent.scrollTop = _savedScroll;
+}
+  if (_focusSave) {
+  var _nel = document.getElementById(_focusSave.id);
+  if (_nel) {
+    _nel.focus({ preventScroll: true });
+    if (_nel.setSelectionRange) {
+      try { _nel.setSelectionRange(_focusSave.ss, _focusSave.se); } catch(e) {}
+    }
+  }
+}
 }
 
 // ── CALENDAR ──
@@ -758,7 +783,7 @@ function rExTab(){
   '<div class="stitle">Ejercicios</div>'+
   '<button class="bp" onclick="oM(\'addCustomEx\')">'+IC.plus+' <span>Añadir</span></button>'+
   '</div>'+
-  '<input class="ps" type="text" placeholder="🔍  Buscar ejercicio..." value="'+q+'" oninput="setPF(\'q\',this.value)"/>'+
+  '<input id="exs-search" class="ps" type="text" placeholder="🔍  Buscar ejercicio..." value="'+q+'" oninput="setPF(\'q\',this.value)"/>'+
   '<div class="mc">'+chips+'</div>'+
   (dblist||'<div class="empty"><p class="emtt">Sin resultados</p></div>')+myList;
 }
@@ -1008,7 +1033,7 @@ function rModal(modal){
   var chips=MUSCLES.map(function(m){return '<button class="mch'+(muscle===m?' on':'')+'" onclick="setPF(\'muscle\',\''+m+'\')">'+m+'</button>';}).join('');
   var items=filt.slice(0,50).map(function(e){return '<div class="eli" onclick="pickEx(\''+e.id+'\',\''+e.n.replace(/'/g,"\\'").replace(/"/g,'&quot;')+'\',\''+e.m+'\')"><div class="elix">'+e.i+'</div><div><div class="eln">'+e.n+(e.custom?'<span class="custom-badge">Custom</span>':'')+'</div><div class="els">'+e.m+' · '+e.q+'</div></div></div>';}).join('');
   title='Elegir Ejercicio';
-  body='<input class="ps" type="text" placeholder="🔍  Buscar..." value="'+q+'" oninput="setPF(\'q\',this.value)"/>'+
+  body='<input id="picker-search" class="ps" type="text" placeholder="🔍  Buscar..." value="'+q+'" oninput="setPF(\'q\',this.value)"/>'+
    '<div class="mc">'+chips+'</div><div class="el">'+(items||'<p style="color:#444;text-align:center;padding:16px">Sin resultados</p>')+'</div>';
  }
  if(modal.type==='editTplEx'){
@@ -1176,8 +1201,16 @@ function rTEB(e,i){
 window._cs=[{w:'',r:''},{w:'',r:''},{w:'',r:''}];
 window._ctx={};
 
-window.gT=function(t){st({tab:t,exView:null,modal:null});};
-window.selD=function(k){st({sel:k});};
+window.gT=function(t){
+  st({tab:t,exView:null,modal:null});
+  var c=document.querySelector('.content');
+  if(c) c.scrollTop=0;
+};
+window.selD=function(k){
+  st({sel:k});
+  var c=document.querySelector('.content');
+  if(c) c.scrollTop=0;
+};
 window.pM=function(){var c=S.cal;st({cal:c.m===0?{y:c.y-1,m:11}:{y:c.y,m:c.m-1}});};
 window.nM=function(){var c=S.cal;st({cal:c.m===11?{y:c.y+1,m:0}:{y:c.y,m:c.m+1}});};
 window.oM=function(type,extra){
