@@ -88,6 +88,8 @@ input[type=number]::-webkit-inner-spin-button,input[type=number]::-webkit-outer-
 .bkr{display:flex;align-items:center;gap:7px;padding:8px 10px;background:#0b0b0b;border-radius:9px;margin-top:7px;border:1px solid #181818}
 .bkl{font-size:10px;color:#383838;flex:1}
 .bki{background:#181818;border:1px solid #232323;border-radius:8px;padding:5px 8px;color:#e0e0e0;font-size:13px;font-family:'Barlow Condensed',sans-serif;font-weight:700;width:58px;text-align:center;outline:none}
+.set-inp{background:#181818;border:1px solid #232323;border-radius:7px;padding:5px 4px;color:#e0e0e0;font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:13px;width:100%;text-align:center;outline:none;-webkit-user-select:text;user-select:text}
+.set-inp:focus{border-color:#FF3B3B;background:#1e1e1e}
 .btn-all{background:#0c280c;border:1px solid #1a401a;color:#4CAF50;border-radius:8px;padding:5px 11px;font-size:11px;font-weight:700;cursor:pointer;font-family:'Barlow',sans-serif;display:flex;align-items:center;gap:4px}
 /* TEMPLATES */
 .tc{background:#101010;border-radius:14px;padding:13px;border:1px solid #191919;margin-bottom:10px}
@@ -664,8 +666,11 @@ function rExCard(ex){
   var isPR=s.done&&allTimeRM>0&&thisRM>=allTimeRM;
   rows+='<div class="sr'+(s.done?' done':'')+'">'+
    '<span class="sn">'+(i+1)+'</span>'+
-   '<span class="sv">'+(s.weight||0)+'kg'+(isPR?'<span class="pr-badge">PR</span>':'')+'</span>'+
-   '<span class="sv">×'+(s.reps||0)+'</span>'+
+   '<div style="position:relative">'+
+  '<input class="set-inp" id="sw-'+ex.id+'-'+i+'" type="number" inputmode="decimal" min="0" step="0.5" value="'+(s.weight||0)+'" onchange="updateSetW(\''+ex.id+'\','+i+',this.value)"/>'+
+  (isPR?'<span class="pr-badge" style="position:absolute;top:-6px;right:-2px;z-index:1">PR</span>':'')+
+'</div>'+
+'<input class="set-inp" id="sr-'+ex.id+'-'+i+'" type="number" inputmode="numeric" min="0" value="'+(s.reps||0)+'" onchange="updateSetR(\''+ex.id+'\','+i+',this.value)"/>'+
    '<button class="ck'+(s.done?' done':'')+'" onclick="togSet(\''+ex.id+'\','+i+')">'+(s.done?IC.check:'')+'</button>'+
    '</div>';
  });
@@ -679,7 +684,6 @@ function rExCard(ex){
   '</div></div>'+
   '<div style="display:flex;gap:4px;align-items:center">'+
   '<button class="btn-all" onclick="togAllSets(\''+ex.id+'\')" title="'+(allDone?'Desmarcar todo':'Marcar todo')+'">'+(allDone?IC.check+' Hecho':'☐ Todo')+'</button>'+
-  '<button class="bism" onclick="openEditExSets(\''+ex.id+'\',\''+ex.name.replace(/'/g,"\\'").replace(/"/g,'&quot;')+'\',\''+ex.muscle+'\')">'+IC.edit+'</button>'+
   '<button class="bism" style="color:#FF3B3B" onclick="delEx(\''+ex.id+'\')">'+IC.trash+'</button>'+
   '</div></div>'+
   '<div class="pb"><div class="pf" style="width:'+prog+'%"></div></div>'+
@@ -1449,6 +1453,31 @@ window.bulkKg=function(exId){
   return Object.assign({},ex,{sets:ex.sets.map(function(s){return Object.assign({},s,{weight:Math.max(0,Math.round((s.weight+kg)*2)/2)});})});
  });
  st({data:d});tst((kg>0?'+':'')+kg+'kg aplicado');
+};
+window.updateSetW=function(exId,idx,val){
+ var d=cd();
+ d.workouts[S.sel]=(d.workouts[S.sel]||[]).map(function(ex){
+  if(ex.id!==exId)return ex;
+  var sets=ex.sets.map(function(s,i){
+   if(i!==idx)return s;
+   return Object.assign({},s,{weight:parseFloat(val)||0});
+  });
+  return Object.assign({},ex,{sets:sets});
+ });
+ st({data:d});
+};
+
+window.updateSetR=function(exId,idx,val){
+ var d=cd();
+ d.workouts[S.sel]=(d.workouts[S.sel]||[]).map(function(ex){
+  if(ex.id!==exId)return ex;
+  var sets=ex.sets.map(function(s,i){
+   if(i!==idx)return s;
+   return Object.assign({},s,{reps:parseInt(val)||0});
+  });
+  return Object.assign({},ex,{sets:sets});
+ });
+ st({data:d});
 };
 window.saveEE=function(exId){
  var name=document.getElementById('ename');if(!name||!name.value.trim()){tst('Pon el nombre');return;}
