@@ -38,7 +38,22 @@ function rConfig(){
   '<strong style="color:#555">Si no llegan:</strong> Ajustes > IronLog > Notificaciones > Permitir<br>'+
   '<strong style="color:#555">Funciona:</strong> La app necesita estar abierta o en segundo plano para recibir la notificacion.'+
   '</div>'+
-  '</div></div>'+  '<div class="ct" style="color:#FF3B3B;margin-bottom:6px;font-size:11px">DATOS</div>'+
+  '</div></div>'+
+  '<div class="ct" style="color:#FF3B3B;margin-bottom:6px;font-size:11px">TIMER DE DESCANSO</div>'+
+  '<div class="card" style="margin-bottom:14px">'+
+  '<div style="margin-bottom:12px">'+
+  '<div class="il">Ejercicios compuestos (seg)</div>'+
+  '<div style="display:flex;align-items:center;gap:10px">'+
+  '<input class="si" type="number" inputmode="numeric" min="30" max="600" id="cfg-rest-c" value="'+restC+'" style="font-size:22px;padding:10px;flex:1"/>'+
+  '<div style="font-size:11px;color:#555;flex:1">Sentadilla, Banca, Peso Muerto</div></div></div>'+
+  '<div style="margin-bottom:14px">'+
+  '<div class="il">Ejercicios aislados (seg)</div>'+
+  '<div style="display:flex;align-items:center;gap:10px">'+
+  '<input class="si" type="number" inputmode="numeric" min="30" max="600" id="cfg-rest-i" value="'+restI+'" style="font-size:22px;padding:10px;flex:1"/>'+
+  '<div style="font-size:11px;color:#555;flex:1">Curl, extensiones, cables</div></div></div>'+
+  '<button class="bp bf" onclick="saveRestConfig()">Guardar Tiempos</button>'+
+  '</div>'+
+  '<div class="ct" style="color:#FF3B3B;margin-bottom:6px;font-size:11px">DATOS</div>'+
   '<div class="card" style="margin-bottom:14px">'+
   '<div style="font-size:11px;color:#555;margin-bottom:12px;line-height:1.5">Exporta tus datos para copia de seguridad. Puedes importarlos en otro dispositivo.</div>'+
   '<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px">'+

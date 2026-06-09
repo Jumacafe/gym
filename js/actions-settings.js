@@ -1,4 +1,13 @@
 // ══ ACTIONS SETTINGS ══
+window.saveRestConfig=function(){
+ var c=parseInt(document.getElementById('cfg-rest-c')?document.getElementById('cfg-rest-c').value:180)||180;
+ var i=parseInt(document.getElementById('cfg-rest-i')?document.getElementById('cfg-rest-i').value:90)||90;
+ var d=cd();
+ d.settings=d.settings||{};
+ d.settings.restCompound=Math.max(30,Math.min(600,c));
+ d.settings.restIso=Math.max(30,Math.min(600,i));
+ st({data:d});tst('Tiempos de descanso guardados');
+};
 window.confirmReset=function(){
  if(confirm('Borrar TODOS los datos de IronLog? Esta accion no se puede deshacer.')){
   localStorage.removeItem('ironlog_v7');
@@ -191,6 +200,7 @@ window.importData=function(){
     var def=defaultData();
     if(!parsed.customExercises)parsed.customExercises=def.customExercises;
     if(!parsed.bodyWeight)parsed.bodyWeight=def.bodyWeight;
+    if(!parsed.workoutNotes)parsed.workoutNotes=def.workoutNotes;
     if(!parsed.goals)parsed.goals=def.goals;
     if(!parsed.goals.customGoals)parsed.goals.customGoals=[];
     if(!parsed.reminders)parsed.reminders=def.reminders;

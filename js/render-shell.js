@@ -17,6 +17,11 @@ if (_activeEl && _activeEl.id &&
 var _contentEl = app.querySelector('.content');
 var _savedScroll = _contentEl ? _contentEl.scrollTop : 0;
  _cachedStreak=calcStreak(data.workouts);
+ var restHTML='';
+ if(S.restTimer){
+  var m=Math.floor(S.restTimer.left/60),sc=S.restTimer.left%60;
+  restHTML='<div class="rest-timer">⏱ '+m+':'+String(sc).padStart(2,'0')+'  <button onclick="stopRest()" style="background:#1a3a5a;border:none;color:#4FC3F7;border-radius:20px;padding:4px 10px;cursor:pointer;font-size:12px;font-weight:700">✕</button></div>';
+ }
  app.innerHTML=
   '<div class="hdr"><div><div class="logo">IRON<span>LOG</span></div><div class="logo-sub">Gym Tracker</div></div>'+
   '<div class="hdr-right">'+

@@ -148,7 +148,10 @@ input[type=text]:focus{border-color:#FF3B3B}
 .emtt{color:#383838;font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:17px;margin:0 0 5px}
 .emts{color:#2a2a2a;font-size:12px;margin:0}
 /* TIMERS & TOAST */
+.rest-timer{position:fixed;bottom:100px;left:50%;transform:translateX(-50%);background:#091320;border:1px solid #152d4a;color:#4FC3F7;padding:10px 20px;border-radius:40px;font-size:14px;font-weight:700;z-index:500;display:flex;align-items:center;gap:10px;white-space:nowrap;animation:toastIn .22s ease;box-shadow:0 4px 24px rgba(0,0,0,.9)}
 .pr-badge{background:#332500;border:1px solid #FFD700;color:#FFD700;font-size:9px;font-weight:700;padding:2px 6px;border-radius:10px;margin-left:4px;text-transform:uppercase;letter-spacing:.5px;animation:badgePop .3s ease}
+.notes-area{width:100%;background:#181818;border:1px solid #222;border-radius:9px;padding:10px 13px;color:#e0e0e0;font-size:13px;font-family:'Barlow',sans-serif;outline:none;resize:none;min-height:60px;margin-bottom:10px;transition:border-color .2s}
+.notes-area:focus{border-color:#333}
 .toast{position:fixed;bottom:96px;left:50%;transform:translateX(-50%);background:#181818;border:1px solid #282828;color:#e2e2e2;padding:9px 18px;border-radius:40px;font-size:13px;font-weight:600;z-index:400;white-space:nowrap;box-shadow:0 4px 24px rgba(0,0,0,.9);animation:toastIn .22s ease;pointer-events:none}
 /* ACHIEVEMENTS */
 .ach-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px}

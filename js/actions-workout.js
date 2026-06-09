@@ -32,6 +32,14 @@ window.togSet=function(exId,idx){
 
  st({data:d});
  if(prMsg)tst(prMsg);
+ var ex2=(d.workouts[S.sel]||[]).filter(function(e){return e.id===exId;})[0];
+ var s2=ex2?ex2.sets[idx]:null;
+ if(s2&&s2.done&&!S.restTimer){
+  var isCompound=['Press de Banca Plano','Sentadilla Libre','Peso Muerto','Press Militar con Barra','Peso Muerto Rumano'].indexOf(ex2?ex2.name:'')>=0;
+  var restC=S.data.settings&&S.data.settings.restCompound?S.data.settings.restCompound:180;
+  var restI=S.data.settings&&S.data.settings.restIso?S.data.settings.restIso:90;
+  startRest(isCompound?restC:restI);
+ }
 };
 window.togAllSets=function(exId){
  var d=cd();

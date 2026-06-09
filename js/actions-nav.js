@@ -43,3 +43,19 @@ window.saveNote=function(v){
 };
 window.setPF=function(f,v){S.pf[f]=v;render();};
 
+window.startRest=function(secs){
+ if(S.restTimer){clearInterval(S.restTimer.interval);}
+ var left=secs||90;
+ var interval=setInterval(function(){
+  left--;
+  if(left<=0){clearInterval(interval);S.restTimer=null;tst('✅ Descanso terminado — ¡a por la siguiente serie!');render();return;}
+  S.restTimer={left:left,interval:interval};
+  var el=document.querySelector('.rest-timer');
+  if(el){var m=Math.floor(left/60),sc=left%60;el.childNodes[0].textContent='⏱ '+m+':'+String(sc).padStart(2,'0')+'  ';}
+ },1000);
+ S.restTimer={left:left,interval:interval};render();
+};
+window.stopRest=function(){
+ if(S.restTimer){clearInterval(S.restTimer.interval);}
+ S.restTimer=null;render();
+};

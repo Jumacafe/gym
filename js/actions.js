@@ -43,6 +43,22 @@ window.saveNote=function(v){
 };
 window.setPF=function(f,v){S.pf[f]=v;render();};
 
+window.startRest=function(secs){
+ if(S.restTimer){clearInterval(S.restTimer.interval);}
+ var left=secs||90;
+ var interval=setInterval(function(){
+  left--;
+  if(left<=0){clearInterval(interval);S.restTimer=null;tst('✅ Descanso terminado — ¡a por la siguiente serie!');render();return;}
+  S.restTimer={left:left,interval:interval};
+  var el=document.querySelector('.rest-timer');
+  if(el){var m=Math.floor(left/60),sc=left%60;el.childNodes[0].textContent='⏱ '+m+':'+String(sc).padStart(2,'0')+'  ';}
+ },1000);
+ S.restTimer={left:left,interval:interval};render();
+};
+window.stopRest=function(){
+ if(S.restTimer){clearInterval(S.restTimer.interval);}
+ S.restTimer=null;render();
+};
 
 window.draftName=function(v){S.tplDraft.name=v;};
 window.draftColor=function(c){
@@ -219,6 +235,12 @@ window.togSet=function(exId,idx){
  if(prMsg)tst(prMsg);
  var ex2=(d.workouts[S.sel]||[]).filter(function(e){return e.id===exId;})[0];
  var s2=ex2?ex2.sets[idx]:null;
+ if(s2&&s2.done&&!S.restTimer){
+  var isCompound=['Press de Banca Plano','Sentadilla Libre','Peso Muerto','Press Militar con Barra','Peso Muerto Rumano'].indexOf(ex2?ex2.name:'')>=0;
+  var restC=S.data.settings&&S.data.settings.restCompound?S.data.settings.restCompound:180;
+  var restI=S.data.settings&&S.data.settings.restIso?S.data.settings.restIso:90;
+  startRest(isCompound?restC:restI);
+ }
 };
 window.togAllSets=function(exId){
  var d=cd();
@@ -352,6 +374,15 @@ window.applyTFromCal=function(tId){
  applyT(tId);
  var content=document.querySelector('.content');
  if(content)content.scrollTo({top:0,behavior:'smooth'});
+};
+window.saveRestConfig=function(){
+ var c=parseInt(document.getElementById('cfg-rest-c')?document.getElementById('cfg-rest-c').value:180)||180;
+ var i=parseInt(document.getElementById('cfg-rest-i')?document.getElementById('cfg-rest-i').value:90)||90;
+ var d=cd();
+ d.settings=d.settings||{};
+ d.settings.restCompound=Math.max(30,Math.min(600,c));
+ d.settings.restIso=Math.max(30,Math.min(600,i));
+ st({data:d});tst('Tiempos de descanso guardados');
 };
 window.confirmReset=function(){
  if(confirm('Borrar TODOS los datos de IronLog? Esta accion no se puede deshacer.')){
