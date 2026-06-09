@@ -33,8 +33,7 @@ Versión más modular para GitHub Pages y iPhone.
 - `js/actions-workout.js`
 - `js/actions-settings.js`
 - `js/reminder.js`
-- `js/timer.js`
-- `js/init.js`
+- - `js/init.js`
 
 ## Uso
 Sube todo a la raíz de GitHub Pages y abre la web en Safari. Después usa **Compartir → Añadir a pantalla de inicio**.
