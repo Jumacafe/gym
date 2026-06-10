@@ -32,14 +32,7 @@ window.togSet=function(exId,idx){
 
  st({data:d});
  if(prMsg)tst(prMsg);
- var ex2=(d.workouts[S.sel]||[]).filter(function(e){return e.id===exId;})[0];
- var s2=ex2?ex2.sets[idx]:null;
- if(s2&&s2.done&&!S.restTimer){
-  var isCompound=['Press de Banca Plano','Sentadilla Libre','Peso Muerto','Press Militar con Barra','Peso Muerto Rumano'].indexOf(ex2?ex2.name:'')>=0;
-  var restC=S.data.settings&&S.data.settings.restCompound?S.data.settings.restCompound:180;
-  var restI=S.data.settings&&S.data.settings.restIso?S.data.settings.restIso:90;
-  startRest(isCompound?restC:restI);
- }
+
 };
 window.togAllSets=function(exId){
  var d=cd();
@@ -106,7 +99,7 @@ window.updateSetW=function(exId,idx,val){
   if(ex.id!==exId)return ex;
   var sets=ex.sets.map(function(s,i){
    if(i!==idx)return s;
-   return Object.assign({},s,{weight:parseFloat(val)||0});
+   return Object.assign({},s,{weight:parseFloat(String(val).replace(',','.'))||0});
   });
   return Object.assign({},ex,{sets:sets});
  });
@@ -130,7 +123,7 @@ window.saveEE=function(exId){
  var rows=document.querySelectorAll('#erows .serr');
  var sets=Array.prototype.slice.call(rows).map(function(row){
   var ins=row.querySelectorAll('input');
-  return{weight:parseFloat(ins[0]?ins[0].value:0)||0,reps:parseInt(ins[1]?ins[1].value:0)||0,done:false};
+  return{weight:parseFloat(String(ins[0]?ins[0].value:0).replace(',','.'))||0,reps:parseInt(ins[1]?ins[1].value:0)||0,done:false};
  });
  var d=cd();
  d.workouts[S.sel]=(d.workouts[S.sel]||[]).map(function(e){return e.id!==exId?e:Object.assign({},e,{name:name.value.trim(),sets:sets});});
@@ -163,7 +156,9 @@ window.applyT=function(tId){
  var skipped=0;
  t.exercises.forEach(function(e){
   if(existNames.indexOf(e.name)>=0){skipped++;return;}
-  d.workouts[S.sel].push({id:uid(),name:e.name,muscle:e.muscle||'',dbId:e.dbId||'',sets:[]});
+  var _ls=getLastSets(e.name,d.workouts);
+  var _initSets=_ls?_ls.map(function(s){return{weight:s.weight||0,reps:s.reps||0,done:false};}):[];
+  d.workouts[S.sel].push({id:uid(),name:e.name,muscle:e.muscle||'',dbId:e.dbId||'',sets:_initSets});
  });
  st({data:d,modal:null});
  tst('✅ '+t.name+' aplicada'+(skipped?' ('+skipped+' duplicado'+(skipped>1?'s':'')+' omitido'+(skipped>1?'s':'')+')':''));

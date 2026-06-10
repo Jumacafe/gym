@@ -29,10 +29,17 @@ window.oM=function(type,extra){
 };
 window.closeM=function(){st({modal:null});};
 
-// ── EXPAND/COLLAPSE CONTROL ──
+// ── EXPAND/COLLAPSE EXERCISE ──
 window.togExExpand=function(id){
  if(!S.expandedEx) S.expandedEx = {};
  S.expandedEx[id] = !S.expandedEx[id];
+ render();
+};
+
+// ── COLLAPSE/EXPAND MUSCLE GROUP ──
+window.togMuscleGroup=function(muscle){
+ if(!S.collapsedMuscle) S.collapsedMuscle={};
+ S.collapsedMuscle[muscle]=!S.collapsedMuscle[muscle];
  render();
 };
 
@@ -42,20 +49,3 @@ window.saveNote=function(v){
  sv(S.data);
 };
 window.setPF=function(f,v){S.pf[f]=v;render();};
-
-window.startRest=function(secs){
- if(S.restTimer){clearInterval(S.restTimer.interval);}
- var left=secs||90;
- var interval=setInterval(function(){
-  left--;
-  if(left<=0){clearInterval(interval);S.restTimer=null;tst('✅ Descanso terminado — ¡a por la siguiente serie!');render();return;}
-  S.restTimer={left:left,interval:interval};
-  var el=document.querySelector('.rest-timer');
-  if(el){var m=Math.floor(left/60),sc=left%60;el.childNodes[0].textContent='⏱ '+m+':'+String(sc).padStart(2,'0')+'  ';}
- },1000);
- S.restTimer={left:left,interval:interval};render();
-};
-window.stopRest=function(){
- if(S.restTimer){clearInterval(S.restTimer.interval);}
- S.restTimer=null;render();
-};

@@ -47,7 +47,7 @@ window.saveTplExEdit=function(exIdx){
   var row=Math.floor(idx/2);var field=idx%2===0?'w':'r';
   if(window._cs[row]){if(field==='w')window._cs[row].w=inp.value;else window._cs[row].r=inp.value;}
  });
- var sets=window._cs.map(function(s){return{weight:parseFloat(s.w)||0,reps:parseInt(s.r)||0,done:false};});
+ var sets=window._cs.map(function(s){return{weight:parseFloat(String(s.w).replace(",","."))||0,reps:parseInt(s.r)||0,done:false};});
  var hasInvalid=sets.some(function(s){return s.reps<=0;});
  if(hasInvalid){tst('❌ Las repeticiones no pueden ser 0');return;}
  var ex=S.tplDraft.exercises[exIdx];
@@ -65,7 +65,9 @@ window.pickEx=function(dbId,name,muscle){
   }
   var d=cd();
   d.workouts[S.sel]=d.workouts[S.sel]||[];
-  var ex={id:uid(),name:name,muscle:muscle,dbId:dbId,sets:[]};
+  var _ls=getLastSets(name,S.data.workouts);
+  var _initSets=_ls?_ls.map(function(s){return{weight:s.weight||0,reps:s.reps||0,done:false};}):[];
+  var ex={id:uid(),name:name,muscle:muscle,dbId:dbId,sets:_initSets};
   d.workouts[S.sel].push(ex);
   sv(d);S.data=d;
   st({data:d,modal:null});
@@ -107,7 +109,7 @@ window.saveCE=function(ctx,exId){
    else window._cs[row].r=parseInt(inp.value)||0;
   }
  });
- var sets=window._cs.map(function(s){return{weight:parseFloat(s.w)||0,reps:parseInt(s.r)||0,done:false};});
+ var sets=window._cs.map(function(s){return{weight:parseFloat(String(s.w).replace(",","."))||0,reps:parseInt(s.r)||0,done:false};});
  
  var hasInvalid=sets.some(function(s){return s.reps<=0;});
  if(hasInvalid){tst('❌ Las repeticiones no pueden ser 0');return;}
@@ -138,4 +140,19 @@ window.saveCE=function(ctx,exId){
   S.tplDraft.exercises.push({name:modal.name,muscle:modal.muscle,dbId:modal.dbId,sets:sets});
   st({modal:{type:S.tplDraft.id?'editTpl':'newTpl',id:S.tplDraft.id}});
  }
+};
+
+window.importWorkoutToTpl=function(){
+ var workout=S.data.workouts[S.sel]||[];
+ if(workout.length===0){tst('No hay ejercicios en el entreno actual');return;}
+ var added=0,skipped=0;
+ workout.forEach(function(ex){
+  if(S.tplDraft.exercises.some(function(e){return e.name===ex.name;})){skipped++;return;}
+  S.tplDraft.exercises.push({name:ex.name,muscle:ex.muscle||'',dbId:ex.dbId||'',sets:[]});
+  added++;
+ });
+ var msg=added>0?'✅ '+added+' ejercicio'+(added>1?'s':'')+' importado'+(added>1?'s':''):'';
+ if(skipped>0)msg+=(msg?' · ':'')+skipped+' ya existía'+(skipped>1?'n':'');
+ tst(msg||'Sin cambios');
+ st({modal:{type:S.tplDraft.id?'editTpl':'newTpl',id:S.tplDraft.id}});
 };

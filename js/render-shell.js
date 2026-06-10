@@ -17,16 +17,11 @@ if (_activeEl && _activeEl.id &&
 var _contentEl = app.querySelector('.content');
 var _savedScroll = _contentEl ? _contentEl.scrollTop : 0;
  _cachedStreak=calcStreak(data.workouts);
- var restHTML='';
- if(S.restTimer){
-  var m=Math.floor(S.restTimer.left/60),sc=S.restTimer.left%60;
-  restHTML='<div class="rest-timer">⏱ '+m+':'+String(sc).padStart(2,'0')+'  <button onclick="stopRest()" style="background:#1a3a5a;border:none;color:#4FC3F7;border-radius:20px;padding:4px 10px;cursor:pointer;font-size:12px;font-weight:700">✕</button></div>';
- }
  app.innerHTML=
   '<div class="hdr"><div><div class="logo">IRON<span>LOG</span></div><div class="logo-sub">Gym Tracker</div></div>'+
   '<div class="hdr-right">'+
   '<div class="sbadge" onclick="gT(\'motivation\')">🔥 '+_cachedStreak+' día'+(_cachedStreak!==1?'s':'')+'</div></div></div>'+
-  '<div class="content">'+(
+  '<div class="content">'+( 
    tab==='calendar'?rCal(workout):
    tab==='exercises'?rExTab():
    tab==='progress'?rProg():
@@ -40,7 +35,7 @@ var _savedScroll = _contentEl ? _contentEl.scrollTop : 0;
   '<button class="nb '+(tab==='progress'?'on':'')+' " onclick="gT(\'progress\')">'+IC.stat+'<span class="nl">Progreso</span></button>'+
   '<button class="nb '+(tab==='motivation'?'on':'')+' " onclick="gT(\'motivation\')">'+IC.mot+'<span class="nl">Metas</span></button>'+
   '<button class="nb '+(tab==='config'?'on':'')+' " onclick="gT(\'config\')">'+IC.gear+'<span class="nl">Config</span></button>'+
-  '</nav>'+restHTML+(modal?rModal(modal):'')+(toast?'<div class="toast">'+toast+'</div>':'');
+  '</nav>'+(modal?rModal(modal):'')+(toast?'<div class="toast">'+toast+'</div>':'');
   var _newContent = app.querySelector('.content');
 if (_newContent && _savedScroll > 0) {
   _newContent.scrollTop = _savedScroll;

@@ -37,6 +37,19 @@ function getHist(name,w){
  });
  return h;
 }
+function getLastSets(name,w){
+ var lastDate=null,lastSets=null;
+ Object.keys(w).sort().forEach(function(date){
+  (w[date]||[]).forEach(function(ex){
+   if(ex.name===name&&ex.sets&&ex.sets.length){
+    var doneSets=ex.sets.filter(function(s){return s.done;});
+    if(!doneSets.length)return;
+    if(!lastDate||date>lastDate){lastDate=date;lastSets=doneSets;}
+   }
+  });
+ });
+ return lastSets;
+}
 function getUsed(w){
  var map={};
  Object.keys(w).forEach(function(d){
@@ -109,4 +122,3 @@ function genRecs(data){
  tips.push(gts[gIdx]);
  return tips.slice(0,6);
 }
-

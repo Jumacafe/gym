@@ -18,7 +18,7 @@ function rModal(modal){
   var seriesList=window._cs.map(function(x,i){
    return '<div class="series-row" style="display:grid;grid-template-columns:40px 1fr 1fr 40px;gap:8px;align-items:center;padding:12px;background:#1a1a1a;border-radius:8px;border:1px solid #2a2a2a;margin-bottom:8px">'+
     '<div style="text-align:center;font-size:11px;color:#555;font-weight:600">S'+(i+1)+'</div>'+
-    '<div><label style="display:block;font-size:9px;color:#555;margin-bottom:3px;text-transform:uppercase;letter-spacing:.5px">Kg</label><input type="number" inputmode="decimal" min="0.1" step="0.1" placeholder="0" value="'+(x.w||'')+'" oninput="_cs['+i+'].w=this.value" style="background:#0d0d0d;border:1px solid #2a2a2a;border-radius:6px;padding:6px;color:#eee;font-size:13px;width:100%;text-align:center;outline:none"/></div>'+
+    '<div><label style="display:block;font-size:9px;color:#555;margin-bottom:3px;text-transform:uppercase;letter-spacing:.5px">Kg</label><input type="text" inputmode="decimal" placeholder="0" value="'+(x.w||'')+'" oninput="_cs['+i+'].w=this.value" style="background:#0d0d0d;border:1px solid #2a2a2a;border-radius:6px;padding:6px;color:#eee;font-size:13px;width:100%;text-align:center;outline:none"/></div>'+
     '<div><label style="display:block;font-size:9px;color:#555;margin-bottom:3px;text-transform:uppercase;letter-spacing:.5px">Reps</label><input type="number" inputmode="numeric" min="1" placeholder="0" value="'+(x.r||'')+'" oninput="_cs['+i+'].r=this.value" style="background:#0d0d0d;border:1px solid #2a2a2a;border-radius:6px;padding:6px;color:#eee;font-size:13px;width:100%;text-align:center;outline:none"/></div>'+
     '<button class="bi" onclick="rmCS('+i+')" style="color:#FF3B3B;padding:6px;justify-content:center">'+IC.trash+'</button>'+
     '</div>';
@@ -37,7 +37,7 @@ function rModal(modal){
   var seriesList=window._cs.map(function(x,i){
    return '<div class="series-row" style="display:grid;grid-template-columns:40px 1fr 1fr 40px;gap:8px;align-items:center;padding:12px;background:#1a1a1a;border-radius:8px;border:1px solid #2a2a2a;margin-bottom:8px">'+
     '<div style="text-align:center;font-size:11px;color:#555;font-weight:600">S'+(i+1)+'</div>'+
-    '<div><label style="display:block;font-size:9px;color:#555;margin-bottom:3px;text-transform:uppercase;letter-spacing:.5px">Kg</label><input type="number" inputmode="decimal" min="0.1" step="0.1" placeholder="0" value="'+(x.w||'')+'" oninput="_cs['+i+'].w=this.value" style="background:#0d0d0d;border:1px solid #2a2a2a;border-radius:6px;padding:6px;color:#eee;font-size:13px;width:100%;text-align:center;outline:none"/></div>'+
+    '<div><label style="display:block;font-size:9px;color:#555;margin-bottom:3px;text-transform:uppercase;letter-spacing:.5px">Kg</label><input type="text" inputmode="decimal" placeholder="0" value="'+(x.w||'')+'" oninput="_cs['+i+'].w=this.value" style="background:#0d0d0d;border:1px solid #2a2a2a;border-radius:6px;padding:6px;color:#eee;font-size:13px;width:100%;text-align:center;outline:none"/></div>'+
     '<div><label style="display:block;font-size:9px;color:#555;margin-bottom:3px;text-transform:uppercase;letter-spacing:.5px">Reps</label><input type="number" inputmode="numeric" min="1" placeholder="0" value="'+(x.r||'')+'" oninput="_cs['+i+'].r=this.value" style="background:#0d0d0d;border:1px solid #2a2a2a;border-radius:6px;padding:6px;color:#eee;font-size:13px;width:100%;text-align:center;outline:none"/></div>'+
     '<button class="bi" onclick="rmCS('+i+')" style="color:#FF3B3B;padding:6px;justify-content:center">'+IC.trash+'</button>'+
     '</div>';
@@ -61,7 +61,7 @@ function rModal(modal){
   title='Editar Ejercicio';
   var rows=ex.sets.map(function(s,i){return '<div class="serr">'+
    '<span class="sn" style="color:#FF3B3B">'+(i+1)+'</span>'+
-   '<input class="si" type="number" inputmode="decimal" min="0" value="'+(s.weight||0)+'" data-i="'+i+'" data-f="w"/>'+
+   '<input class="si" type="text" inputmode="decimal" value="'+(s.weight||0)+'" data-i="'+i+'" data-f="w"/>'+
    '<input class="si" type="number" inputmode="numeric" min="0" value="'+(s.reps||0)+'" data-i="'+i+'" data-f="r"/>'+
    '<button class="bism" style="color:#FF3B3B" onclick="rmER('+i+')">'+IC.trash+'</button></div>';}).join('');
   body='<label class="il">Nombre</label><input type="text" id="ename" value="'+ex.name+'"/>'+
@@ -90,6 +90,7 @@ function rModal(modal){
    '<div id="texs">'+exRows+'</div>'+
    (draft.exercises.length===0?'<div style="text-align:center;padding:12px;color:#444;font-size:12px">Añade ejercicios desde la lista</div>':'')+
    '<button class="bas" onclick="openPickerForTemplate()">'+IC.plus+' Añadir ejercicio</button>'+
+   (S.data.workouts[S.sel]&&S.data.workouts[S.sel].length>0?'<button class="bs" style="width:100%;margin-bottom:8px;" onclick="importWorkoutToTpl()">📋 Importar ejercicios del entreno actual</button>':'')+
    '<button class="bp bf" onclick="saveTpl()">'+(isEdit?'Guardar Cambios':'Crear Rutina')+'</button>';
  }
  if(modal.type==='addCustomEx'){
@@ -146,6 +147,19 @@ function rModal(modal){
    '<label class="il">Progreso actual</label>'+
    '<input class="si" type="number" inputmode="decimal" min="0" id="cg-current" value="'+(editing?editing.current||0:0)+'" placeholder="0" style="font-size:22px;padding:12px;margin-bottom:14px"/>'+
    '<button class="bp bf" onclick="saveCustomGoal('+(editing?modal.idx:-1)+')">'+(editing?'Guardar Cambios':'Crear Meta')+'</button>';
+ }
+ if(modal.type==='confirmDelTpl'){
+  var tpl=(S.data.templates||[]).filter(function(t){return t.id===modal.id;})[0];
+  var tplName=tpl?tpl.name:'esta rutina';
+  title='Eliminar Rutina';
+  body='<div style="text-align:center;padding:8px 0 20px">'+
+   '<div style="font-size:32px;margin-bottom:12px">🗑️</div>'+
+   '<div style="font-size:15px;color:#ccc;margin-bottom:6px">¿Eliminar <strong style="color:#fff">'+tplName+'</strong>?</div>'+
+   '<div style="font-size:12px;color:#555;margin-bottom:24px">Esta acción no se puede deshacer.</div>'+
+   '<div style="display:flex;gap:10px;">'+
+   '<button class="bs" style="flex:1;padding:12px;font-size:14px;" onclick="closeM()">Cancelar</button>'+
+   '<button style="flex:1;padding:12px;font-size:14px;font-weight:700;background:#8B0000;border:none;border-radius:10px;color:#fff;cursor:pointer;" onclick="confirmDelTpl(\''+modal.id+'\')">' + IC.trash + ' Eliminar</button>'+
+   '</div>';
  }
  return '<div class="ov" id="ov" onclick="if(event.target.id===\'ov\')closeM()">'+
   '<div class="md">'+

@@ -17,9 +17,12 @@ window.confirmReset=function(){
  }
 };
 window.delTpl=function(id){
+ st({modal:{type:'confirmDelTpl',id:id}});
+};
+window.confirmDelTpl=function(id){
  var d=cd();
  d.templates=d.templates.filter(function(t){return t.id!==id;});
- st({data:d});tst('Plantilla eliminada');
+ st({data:d,modal:null});tst('Plantilla eliminada');
 };
 window.rmTex=function(i){
  S.tplDraft.exercises.splice(i,1);

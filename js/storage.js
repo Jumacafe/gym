@@ -24,7 +24,8 @@ var S={
  toast:null,tt:null,
  quoteIdx:Math.floor(Math.random()*QUOTES.length),
  tplDraft:{id:null,name:'',color:'#FF3B3B',exercises:[]},
- expandedEx: {} // Para manejar los ejercicios que se colapsan/expanden
+ expandedEx: {}, // Para manejar los ejercicios que se colapsan/expanden
+ collapsedMuscle: {} // Para colapsar/expandir grupos de músculo
 };
 
 (function initData(){
@@ -58,4 +59,3 @@ function getExTip(name){
 function st(p){Object.assign(S,p);if(p.data!==undefined)sv(S.data);render();}
 function tst(msg){if(S.tt)clearTimeout(S.tt);var t=setTimeout(function(){st({toast:null,tt:null});},2400);st({toast:msg,tt:t});}
 function cd(){return JSON.parse(JSON.stringify(S.data));}
-
