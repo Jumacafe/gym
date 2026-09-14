@@ -18,6 +18,7 @@ const ASSETS = [
   './js/actions.js',
   './js/reminder.js',
   './js/timer.js',
+  './js/backup-google.js',
   './js/init.js',
   './assets/icon-192.png',
   './assets/icon-512.png'

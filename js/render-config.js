@@ -61,5 +61,43 @@ function rConfig(){
   '<button class="bs bf" style="margin:0" onclick="importData()">'+IC.import+' Importar</button>'+
   '</div>'+
   '<button class="bas" style="color:#FF3B3B;border-color:#3a1212" onclick="confirmReset()">Borrar todos los datos</button>'+
-  '</div>';
+  '</div>'+
+  (function(){
+   var auth=S.data.googleAuth;
+   var connected=auth&&auth.connected;
+   var lastBk=S.data.lastBackupDate;
+   var daysSince=lastBk?Math.floor((Date.now()-lastBk)/(1000*60*60*24)):null;
+   var emailTxt=auth&&auth.email?' · '+auth.email:'';
+   var statusHtml=connected?
+    '<div style="background:#0c2a0c;border-radius:8px;padding:10px;font-size:12px;color:#4CAF50;text-align:center;margin-top:8px">✓ Conectado'+emailTxt+'</div>'+
+    (daysSince!==null?
+     '<div style="font-size:11px;color:#888;text-align:center;margin-top:6px">Última copia: '+(
+      daysSince===0?'hoy':daysSince===1?'ayer':'hace '+daysSince+' días'
+     )+'</div>':
+     '<div style="font-size:11px;color:#FF8C00;text-align:center;margin-top:6px">Nunca se hizo una copia</div>')
+    :
+    '<div style="background:#1a1a1a;border-radius:8px;padding:10px;font-size:12px;color:#555;text-align:center;margin-top:8px">Conectá tu cuenta de Google para subir backups automáticos</div>';
+   var btn=connected?
+    '<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">'+
+     '<button class="bp bf" style="margin:0;background:#1e3a1e;border:1px solid #2a5a2a" onclick="gdriveBackupNow(true)">☁️ Copia ahora</button>'+
+     '<button class="bs bf" style="margin:0" onclick="gdriveDisconnect()">Desconectar</button>'+
+    '</div>'+
+    '<button class="bas" style="margin-top:8px;color:#aaa;font-size:11px" onclick="gdriveCleanupOld()">🧹 Borrar duplicados en Drive</button>'
+    :
+    '<button class="bp bf" onclick="gdriveConnect().then(function(){render();}).catch(function(e){tst(\'Error: \'+e.message);})">🔗 Conectar Google</button>';
+   return '<div class="ct" style="color:#FF3B3B;margin-bottom:6px;font-size:11px">☁️ BACKUP EN GOOGLE DRIVE</div>'+
+    '<div class="card" style="margin-bottom:14px">'+
+     '<div style="display:flex;justify-content:space-between;align-items:center">'+
+      '<div class="rem-info"><div class="rem-title">Backup automático semanal</div><div class="rem-sub">Se sube a Drive una vez por semana</div></div>'+
+     '</div>'+
+     '<div style="margin-top:10px;padding:10px;background:#0d0d0d;border-radius:8px;font-size:11px;color:#777;line-height:1.6">'+
+      '<strong style="color:#aaa">📌 Cómo funciona:</strong><br>'+
+      '• Las copias se guardan en la carpeta <strong>appDataFolder</strong> (oculta, no aparece en tu Drive).<br>'+
+      '• Se usa <strong>siempre el mismo archivo</strong> (<code style="background:#222;padding:1px 4px;border-radius:3px">ironlog_backup.json</code>) — se sobrescribe cada semana.<br>'+
+      '• <strong>Cero duplicados</strong>: nunca queda copia vieja acumulando espacio.<br>'+
+      '• Almacenamiento gratis: el backup pesa pocos KB.'+
+     '</div>'+
+     '<div style="margin-top:12px">'+statusHtml+btn+'</div>'+
+    '</div>';
+  })();
 }

@@ -11,7 +11,7 @@ function fmtS(s){var d=new Date(s+'T12:00:00');return d.toLocaleDateString('es-E
 function e1rm(w,r){if(r<=1)return w;return Math.round(w*(1+r/30));}
 
 function defaultData(){
- return {workouts:{},workoutTimes:{},templates:[],customExercises:[],bodyWeight:[],workoutNotes:{},goals:{weeklySessions:4,customGoals:[]},reminders:{enabled:false,days:[0,1,2,3,4],time:'18:00'},settings:{weightUnit:'kg'},dismissedRoutinePrompts:{}};
+ return {workouts:{},workoutTimes:{},templates:[],customExercises:[],bodyWeight:[],workoutNotes:{},goals:{weeklySessions:4,customGoals:[]},reminders:{enabled:false,days:[0,1,2,3,4],time:'18:00'},settings:{weightUnit:'kg'},dismissedRoutinePrompts:{},injuries:[],mmcRatings:{},stagnationDismissed:{},googleAuth:null,lastBackupDate:null};
 }
 
 // ══ STATE ══
@@ -41,6 +41,11 @@ var S={
   if(!S.data.reminders)S.data.reminders={enabled:false,days:[0,1,2,3,4],time:'18:00'};
   if(!S.data.settings)S.data.settings={weightUnit:'kg'};
   if(!S.data.dismissedRoutinePrompts)S.data.dismissedRoutinePrompts={};
+  if(!S.data.injuries)S.data.injuries=[];
+  if(!S.data.mmcRatings)S.data.mmcRatings={};
+  if(!S.data.stagnationDismissed)S.data.stagnationDismissed={};
+  if(S.data.googleAuth===undefined)S.data.googleAuth=null;
+  if(S.data.lastBackupDate===undefined)S.data.lastBackupDate=null;
  } else {
   S.data=defaultData();sv(S.data);
  }

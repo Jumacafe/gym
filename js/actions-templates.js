@@ -20,6 +20,13 @@ window.dismissRutinaPrompt=function(dateKey){
  d.dismissedRoutinePrompts[dateKey]=true;
  st({data:d});
 };
+// Dismiss advertencia de meseta para un ejercicio
+window.dismissStagnation=function(exName){
+ var d=cd();
+ d.stagnationDismissed=d.stagnationDismissed||{};
+ d.stagnationDismissed[exName]=true;
+ st({data:d});
+};
 window.draftExSetField=function(exIdx,setIdx,f,v){
  var ex=S.tplDraft.exercises[exIdx];if(!ex)return;
  if(!Array.isArray(ex.sets))ex.sets=[{weight:ex.weight||0,reps:ex.reps||10}];

@@ -82,6 +82,130 @@ function rProg(){
   '<div class="card"><div class="ct">Sesiones/semana · últ. 8 semanas</div><div class="cw">'+svgBar(vBars,340,90,'#FF3B3B')+'</div></div>'+
   '<div class="divider"></div>'+
 
+  /* ── VOLUMEN SEMANAL POR MÚSCULO ── */
+  (function(){
+   var vol=weeklyVolumeByMuscle(data.workouts,7);
+   var muscles=['Pecho','Espalda','Hombros','Biceps','Triceps','Piernas','Gluteos','Pantorrillas','Core'];
+   var hasData=Object.keys(vol).some(function(k){return vol[k].sets>0;});
+   if(!hasData)return'';
+   var rows=muscles.map(function(m){
+    var v=vol[m]||{sets:0,hardSets:0,target:null};
+    var st=volumeStatus(v.hardSets,v.target);
+    var pct=0;
+    if(v.target&&v.target.mrv)pct=Math.min(100,v.hardSets/v.target.mrv*100);
+    else if(v.sets>0)pct=50;
+    var barColor=v.hardSets>=v.target&&v.target?v.target.mrv:st.color;
+    var targetTxt=v.target?'MEV '+v.target.mev+' · MAV '+v.target.mav[0]+'-'+v.target.mav[1]+' · MRV '+v.target.mrv:'';
+    return '<div style="margin-bottom:9px">'+
+     '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:3px">'+
+      '<div style="display:flex;align-items:center;gap:6px">'+
+       '<span style="font-size:11px;font-weight:700;color:#e2e2e2;min-width:70px">'+m+'</span>'+
+      '</div>'+
+      '<div style="display:flex;align-items:center;gap:6px">'+
+       '<span style="font-size:10px;color:#888">'+v.sets+(v.hardSets!==v.sets?' <span style="color:#aaa">('+v.hardSets+' duras)</span>':'')+' series</span>'+
+      '</div>'+
+     '</div>'+
+     '<div style="height:8px;background:#1a1a1a;border-radius:4px;overflow:hidden;position:relative">'+
+      // Zonas MEV/MAV/MRV
+      (v.target?'<div style="position:absolute;left:'+(v.target.mev/v.target.mrv*100)+'%;top:0;bottom:0;width:1px;background:#00D084"></div>'+
+       '<div style="position:absolute;left:'+(v.target.mav[1]/v.target.mrv*100)+'%;top:0;bottom:0;width:1px;background:#FF8C00"></div>':'')+
+      '<div style="height:100%;background:'+st.color+';width:'+pct+'%;border-radius:4px;transition:width .4s"></div>'+
+     '</div>'+
+     '<div style="font-size:9px;color:#666;margin-top:2px;display:flex;justify-content:space-between">'+
+      '<span style="color:'+st.color+'">'+st.label+'</span>'+
+      (v.target?'<span>'+targetTxt+'</span>':'')+
+     '</div>'+
+    '</div>';
+   }).join('');
+   return '<div class="p-label">Volumen semanal por músculo</div>'+
+    '<div class="card" style="margin-bottom:14px">'+
+     '<div style="font-size:10px;color:#666;margin-bottom:10px;line-height:1.5">Series <strong style="color:#aaa">duras</strong> (RIR 0-3) en los últimos 7 días. Para hipertrofia apuntá a la zona MAV.'+
+      '<br><span style="color:#00D084">━</span> MEV &nbsp; <span style="color:#FF8C00">━</span> MRV</div>'+
+     rows+
+    '</div>'+
+    '<div class="divider"></div>';
+  })()+
+
+  /* ── DETECCIÓN DE MESETAS ── */
+  (function(){
+   var stag=getStagnantExercises(data.workouts,3);
+   var keys=Object.keys(stag).filter(function(k){return!data.stagnationDismissed[k];});
+   if(!keys.length)return'';
+   var rows=keys.slice(0,4).map(function(name){
+    var info=stag[name];
+    return '<div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid #1a1a1a">'+
+     '<div style="flex:1">'+
+      '<div style="font-size:12px;color:#e2e2e2;font-weight:600">'+name+'</div>'+
+      '<div style="font-size:10px;color:#888;margin-top:2px">Mejor 1RM: '+info.olderBest+'kg · Sin cambios hace ~'+info.weeksStagnant+' sem</div>'+
+     '</div>'+
+     '<button class="bism" style="color:#888" onclick="dismissStagnation(\''+name.replace(/'/g,"\\'")+'\')">'+IC.check+'</button>'+
+    '</div>';
+   }).join('');
+   return '<div class="p-label">⚠ Ejercicios estancados</div>'+
+    '<div class="card" style="margin-bottom:14px;border-color:#3a2a1a">'+
+     '<div style="font-size:10px;color:#FF8C00;margin-bottom:8px;line-height:1.5">Llevás 3+ semanas sin progresar en estos ejercicios. Probá una semana de deload o cambiá el rango de reps.</div>'+
+     rows+
+    '</div>';
+  })()+
+
+  /* ── RESUMEN MENSUAL ── */
+  (function(){
+   var months=availableMonths(data.workouts);
+   if(months.length===0)return'';
+   // Mostrar los últimos 6 meses como máximo
+   var monthsToShow=months.slice(0,6);
+   var cards=monthsToShow.map(function(ym,idx){
+    var sum=monthlySummary(data.workouts,ym,data.workoutTimes);
+    if(!sum)return'';
+    var exRows=sum.exercises.map(function(e){
+     if(e.progressKg<=0&&e.progressPct<=0)return'';
+     var pct=Math.min(100,Math.max(0,e.progressPct));
+     var pctColor=e.progressPct>=10?'#4CAF50':e.progressPct>=5?'#FFD700':e.progressPct>=0?'#FF8C00':'#666';
+     var barBg=pctColor;
+     var sign=e.progressKg>0?'+':'';
+     return '<div style="display:flex;align-items:center;gap:8px;padding:7px 0;border-bottom:1px solid #1a1a1a">'+
+      '<div style="flex:1;min-width:0">'+
+       '<div style="font-size:12px;color:#e2e2e2;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+e.name+'</div>'+
+       '<div style="font-size:10px;color:#777;margin-top:1px">'+e.startW+'kg×'+e.startR+' → '+e.endW+'kg×'+e.endR+'</div>'+
+      '</div>'+
+      '<div style="display:flex;flex-direction:column;align-items:flex-end;gap:1px;min-width:90px">'+
+       '<div style="font-family:\'Barlow Condensed\',sans-serif;font-weight:800;font-size:14px;color:'+pctColor+'">'+sign+e.progressKg+'kg</div>'+
+       '<div style="font-size:10px;color:'+pctColor+';font-weight:700">'+sign+e.progressPct+'%</div>'+
+      '</div>'+
+      '<div style="flex:none;width:60px">'+
+       '<div style="height:5px;background:#1a1a1a;border-radius:3px;overflow:hidden">'+
+        '<div style="height:100%;background:'+barBg+';width:'+pct+'%;border-radius:3px"></div>'+
+       '</div>'+
+      '</div>'+
+     '</div>';
+    }).join('');
+    var totalVol=sum.totalVolume>=1000?(sum.totalVolume/1000).toFixed(1)+'t':sum.totalVolume+'kg';
+    var timeStr=sum.totalMinutes?fmtDuration(sum.totalMinutes):'—';
+    // Solo mostrar ejercicios que progresaron
+    var exWithProgress=sum.exercises.filter(function(e){return e.progressKg>0||e.progressPct>0;});
+    var exList=exRows?'<div style="margin-top:6px">'+exRows+'</div>':'<div style="font-size:11px;color:#555;text-align:center;padding:14px">Sin progresión registrada este mes (entrenaste pero no subiste peso ni reps)</div>';
+    var id='ms-'+ym;
+    return '<div class="ms-card" style="margin-bottom:10px;background:#101010;border:1px solid #191919;border-radius:14px;overflow:hidden">'+
+     '<div onclick="document.getElementById(\''+id+'\').classList.toggle(\'ms-hidden\');this.querySelector(\'.ms-arrow\').textContent=document.getElementById(\''+id+'\').classList.contains(\'ms-hidden\')?\'▸\':\'▾\'" style="padding:13px 14px;cursor:pointer;display:flex;justify-content:space-between;align-items:center">'+
+      '<div style="flex:1">'+
+       '<div style="font-family:\'Barlow Condensed\',sans-serif;font-weight:900;font-size:20px;color:#fff;letter-spacing:1px">'+fmtMonthLabel(ym).toUpperCase()+'</div>'+
+       '<div style="font-size:10px;color:#777;margin-top:3px">'+sum.sessions+' sesiones · '+sum.totalSets+' series · '+totalVol+' · '+timeStr+' gym</div>'+
+      '</div>'+
+      '<div style="display:flex;align-items:center;gap:8px">'+
+       '<div style="font-size:10px;color:#888;text-align:right">'+exWithProgress.length+' con progreso</div>'+
+       '<div class="ms-arrow" style="color:#888;font-size:14px">'+(idx===0?'▾':'▸')+'</div>'+
+      '</div>'+
+     '</div>'+
+     '<div id="'+id+'" class="'+(idx===0?'':'ms-hidden')+'" style="padding:0 14px 14px">'+
+      exList+
+     '</div>'+
+    '</div>';
+   }).join('');
+   return '<div class="p-label">Resumen mensual</div>'+
+    '<div style="font-size:10px;color:#666;margin-bottom:10px;line-height:1.5">Evolución por ejercicio: comparamos el <strong style="color:#aaa">mejor 1RM</strong> (estimado) de la <strong style="color:#aaa">primera sesión</strong> del mes vs la <strong style="color:#aaa">última</strong>.</div>'+
+    cards;
+  })()+
+
   /* ── ESTA SEMANA ── */
   '<div class="p-label">Esta semana</div>'+
   '<div class="sg">'+

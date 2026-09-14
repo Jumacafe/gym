@@ -26,6 +26,7 @@ window.togSet=function(exId,idx){
  var prMsg='';
  var becameAllDone=false;
  var toggledOn=false;
+ haptic(15);
  d.workouts[S.sel]=(d.workouts[S.sel]||[]).map(function(ex){
   if(ex.id!==exId)return ex;
   var sets=ex.sets.map(function(s,i){
@@ -65,6 +66,7 @@ window.togAllSets=function(exId){
  var d=cd();
  var becameAllDone = false;
  var toggledOn = false;
+ haptic(20);
  d.workouts[S.sel]=(d.workouts[S.sel]||[]).map(function(ex){
   if(ex.id!==exId)return ex;
   var allDone=ex.sets.every(function(s){return s.done;});
@@ -95,10 +97,71 @@ window.addSetToEx=function(exId){
  var d=cd();
  d.workouts[S.sel]=(d.workouts[S.sel]||[]).map(function(ex){
   if(ex.id!==exId)return ex;
-  var last=ex.sets.length?ex.sets[ex.sets.length-1]:{weight:0,reps:0};
-  return Object.assign({},ex,{sets:ex.sets.concat([{weight:last.weight||0,reps:last.reps||0,done:false}])});
+  // Auto-fill desde el último set de TRABAJO (ignora warmups)
+  var workSets=(ex.sets||[]).filter(function(s){return!s.warmUp;});
+  var last=workSets.length?workSets[workSets.length-1]:{weight:0,reps:0};
+  return Object.assign({},ex,{sets:(ex.sets||[]).concat([{weight:last.weight||0,reps:last.reps||0,done:false,rir:undefined}])});
  });
  sv(d);S.data=d;st({data:d});
+};
+// Auto-rellena los inputs de peso/reps con lo último escrito (UX)
+window.duplicateLastSet=function(exId){
+ var d=cd();
+ d.workouts[S.sel]=(d.workouts[S.sel]||[]).map(function(ex){
+  if(ex.id!==exId)return ex;
+  var workSets=(ex.sets||[]).filter(function(s){return!s.warmUp;});
+  if(workSets.length<2)return ex;
+  var prev=workSets[workSets.length-2];
+  var last=workSets[workSets.length-1];
+  return Object.assign({},ex,{sets:ex.sets.map(function(s,i){
+   if(i!==ex.sets.length-1)return s;
+   return Object.assign({},s,{weight:prev.weight,reps:prev.reps});
+  })});
+ });
+ sv(d);S.data=d;st({data:d});
+ tst('↩ Copiado del set anterior');
+};
+// Agrega series de calentamiento automáticas
+window.addWarmupSets=function(exId){
+ var d=cd();
+ d.workouts[S.sel]=(d.workouts[S.sel]||[]).map(function(ex){
+  if(ex.id!==exId)return ex;
+  var workSets=(ex.sets||[]).filter(function(s){return!s.warmUp&&s.weight>0;});
+  if(!workSets.length)return ex;
+  // Usar el peso del primer set de trabajo (suele ser el más pesado)
+  var workingWeight=workSets[0].weight||0;
+  var warmups=generateWarmups(workingWeight,ex.name);
+  if(!warmups.length)return ex;
+  // Insertar warmups ANTES de los sets de trabajo
+  return Object.assign({},ex,{sets:warmups.concat(ex.sets)});
+ });
+ sv(d);S.data=d;st({data:d});
+ tst('🔥 Calentamiento agregado');
+};
+// Haptic feedback (vibración corta) si está disponible
+function haptic(pattern){
+ try{if(navigator.vibrate&&S.data.settings&&S.data.settings.haptic!==false)navigator.vibrate(pattern||15);}catch(e){}
+}
+window.togRIR=function(exId,idx,value){
+ var d=cd();
+ d.workouts[S.sel]=(d.workouts[S.sel]||[]).map(function(ex){
+  if(ex.id!==exId)return ex;
+  var sets=ex.sets.map(function(s,i){
+   if(i!==idx)return s;
+   var newRIR=(s.rir===value)?undefined:value; // toggle off si es el mismo
+   return Object.assign({},s,{rir:newRIR});
+  });
+  return Object.assign({},ex,{sets:sets});
+ });
+ st({data:d});
+};
+window.saveMMCRating=function(exId,rating){
+ var d=cd();
+ if(!d.mmcRatings)d.mmcRatings={};
+ var key=S.sel+'|'+exId;
+ d.mmcRatings[key]=rating;
+ st({data:d});
+ tst(rating>=4?'💪 Buena conexion':rating>=3?'👍 OK':'⚠️ Proba a专注');
 };
 window.removeSetFromEx=function(exId,idx){
  var d=cd();

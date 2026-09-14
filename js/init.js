@@ -23,6 +23,10 @@
  render();
  var appEl=document.getElementById('app');if(appEl)appEl.removeAttribute('aria-busy');
  window.setupReminders();
+ // Chequear backup automático de Google Drive (silencioso si pasaron 7+ días)
+ setTimeout(function(){
+  try{if(typeof initGoogleAuth==='function'){initGoogleAuth();}if(typeof window.gdriveCheckAutoBackup==='function'){window.gdriveCheckAutoBackup();}}catch(e){console.log('auto-backup check:',e);}
+ },3000);
  document.addEventListener('visibilitychange',function(){
   if(!document.hidden){window.setupReminders();}
  });
