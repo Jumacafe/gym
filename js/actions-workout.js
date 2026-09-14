@@ -1,13 +1,37 @@
 // ══ ACTIONS WORKOUT ══
+// Helper: registra/actualiza timestamps de inicio y fin del entreno
+function trackWorkoutTime(d, marking){
+ // marking=true → usuario está marcando una serie como hecha
+ // marking=false → usuario está desmarcando
+ var times=d.workoutTimes[S.sel]||{startedAt:null,endedAt:null};
+ var now=new Date().toISOString();
+ if(marking){
+  if(!times.startedAt)times.startedAt=now;
+  times.endedAt=now;
+ } else {
+  // Comprobar si quedan series hechas
+  var hasAnyDone=(d.workouts[S.sel]||[]).some(function(ex){return (ex.sets||[]).some(function(s){return s.done;});});
+  if(!hasAnyDone){
+   // Todo desmarcado: reseteamos tiempos
+   times.startedAt=null;
+   times.endedAt=null;
+  }
+  // Si quedan series hechas, dejamos los tiempos como están (endedAt representa la última marcación real)
+ }
+ d.workoutTimes[S.sel]=times;
+}
+
 window.togSet=function(exId,idx){
  var d=cd();
  var prMsg='';
  var becameAllDone=false;
+ var toggledOn=false;
  d.workouts[S.sel]=(d.workouts[S.sel]||[]).map(function(ex){
   if(ex.id!==exId)return ex;
   var sets=ex.sets.map(function(s,i){
    if(i!==idx)return s;
    var newDone=!s.done;
+   toggledOn=newDone;
    if(newDone&&ex.name){
     var hist=getHist(ex.name,S.data.workouts);
     var prevBestRM=hist.length?Math.max.apply(null,hist.map(function(x){return x.rm;})):0;
@@ -16,7 +40,7 @@ window.togSet=function(exId,idx){
    }
    return Object.assign({},s,{done:newDone});
   });
-  
+
   // Revisamos si esta acción completó todo el ejercicio
   var allDoneNow = sets.length > 0 && sets.every(function(s){return s.done;});
   if(allDoneNow) becameAllDone = true;
@@ -24,10 +48,13 @@ window.togSet=function(exId,idx){
   return Object.assign({},ex,{sets:sets});
  });
 
+ // Track de tiempo en gym
+ trackWorkoutTime(d, toggledOn);
+
  // Si se completó, forzamos que colapse (expanded = false)
  if(becameAllDone) {
   if(!S.expandedEx) S.expandedEx = {};
-  S.expandedEx[exId] = false; 
+  S.expandedEx[exId] = false;
  }
 
  st({data:d});
@@ -37,10 +64,12 @@ window.togSet=function(exId,idx){
 window.togAllSets=function(exId){
  var d=cd();
  var becameAllDone = false;
+ var toggledOn = false;
  d.workouts[S.sel]=(d.workouts[S.sel]||[]).map(function(ex){
   if(ex.id!==exId)return ex;
   var allDone=ex.sets.every(function(s){return s.done;});
   var newDoneState = !allDone;
+  toggledOn=newDoneState;
   if(newDoneState && ex.sets.length > 0) becameAllDone = true;
   return Object.assign({},ex,{sets:ex.sets.map(function(s){return Object.assign({},s,{done:newDoneState});})});
  });
@@ -49,6 +78,9 @@ window.togAllSets=function(exId){
   if(!S.expandedEx) S.expandedEx = {};
   S.expandedEx[exId] = false;
  }
+
+ // Track de tiempo en gym
+ trackWorkoutTime(d, toggledOn);
 
  var nowAllDone=(d.workouts[S.sel]||[]).filter(function(e){return e.id===exId;})[0];
  st({data:d});
@@ -117,6 +149,20 @@ window.updateSetR=function(exId,idx,val){
   return Object.assign({},ex,{sets:sets});
  });
  st({data:d});
+};
+// Aplica la sugerencia inteligente al set (peso + reps)
+window.applySuggestion=function(exId,idx,w,r){
+ var d=cd();
+ d.workouts[S.sel]=(d.workouts[S.sel]||[]).map(function(ex){
+  if(ex.id!==exId)return ex;
+  var sets=ex.sets.map(function(s,i){
+   if(i!==idx)return s;
+   return Object.assign({},s,{weight:w,reps:r});
+  });
+  return Object.assign({},ex,{sets:sets});
+ });
+ st({data:d});
+ tst('💡 Sugerencia aplicada: '+w+'kg × '+r);
 };
 window.saveEE=function(exId){
  var name=document.getElementById('ename');if(!name||!name.value.trim()){tst('Pon el nombre');return;}

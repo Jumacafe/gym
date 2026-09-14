@@ -1,3 +1,20 @@
+// ══ ROUTINE DAYS ══
+// Etiquetas y orden de días en español (Lunes primero)
+var DAYS_LBL=['L','M','X','J','V','S','D'];
+var DAYS_FULL=['Lunes','Martes','Miércoles','Jueves','Viernes','Sábado','Domingo'];
+
+// displayIdx (0=Lunes..6=Domingo) → JS getDay (0=Dom..6=Sáb)
+function dispIdxToJsDay(idx){return idx===6?0:idx+1;}
+// JS getDay → displayIdx
+function jsDayToDispIdx(jsDay){return jsDay===0?6:jsDay-1;}
+
+// Devuelve las plantillas asignadas al día de la semana de dateKey
+function templatesForDate(dateKey,templates){
+ if(!templates||!dateKey)return[];
+ var jsDay=new Date(dateKey+'T12:00:00').getDay();
+ return templates.filter(function(t){return(t.days||[]).indexOf(jsDay)>=0;});
+}
+
 // ══ STREAK ══
 function calcStreak(w){
  var allDates=Object.keys(w).filter(function(k){return w[k]&&w[k].length>0;}).sort();
@@ -88,6 +105,97 @@ function thisWk(w){
 function muscDist(w){
  var m={};Object.values(w).forEach(function(day){day.forEach(function(ex){var k=ex.muscle||'Otro';m[k]=(m[k]||0)+1;});});return m;
 }
+
+// ══ SMART SUGGESTION ══
+// Busca la última sesión con series HECHAS del ejercicio en los últimos 7 días
+// (excluye el día actual para no sugerirte los sets que acabas de hacer)
+// Devuelve {weight, reps} para el set en la posición setIndex, o null
+function getSmartSuggestion(name, setIndex, workouts){
+ if(!workouts||!name)return null;
+ var todayKey=dk(new Date());
+ var dates=Object.keys(workouts).filter(function(d){
+  if(d===todayKey)return false;
+  if(!workouts[d]||workouts[d].length===0)return false;
+  var diff=Math.floor((Date.now()-new Date(d+'T12:00:00').getTime())/86400000);
+  return diff>=1&&diff<=7;
+ }).sort();
+ var lastSets=null;
+ dates.forEach(function(d){
+  (workouts[d]||[]).forEach(function(ex){
+   if(ex.name===name){
+    var done=(ex.sets||[]).filter(function(s){return s.done;});
+    if(done.length>0)lastSets=done;
+   }
+  });
+ });
+ if(!lastSets||!lastSets[setIndex])return null;
+ var last=lastSets[setIndex];
+ return {weight:last.weight||0,reps:last.reps||0};
+}
+
+// ══ GYM TIME STATS ══
+// Devuelve la duración de una sesión en minutos (0 si no hay datos)
+function sessionDurationMin(dateKey,wt){
+ var t=wt&&wt[dateKey];
+ if(!t||!t.startedAt||!t.endedAt)return 0;
+ var ms=new Date(t.endedAt)-new Date(t.startedAt);
+ if(isNaN(ms)||ms<=0)return 0;
+ return Math.round(ms/60000);
+}
+
+// Devuelve todas las sesiones con duración > 0, ordenadas de más reciente a más antigua
+function getSessionsWithTime(wt){
+ var out=[];
+ Object.keys(wt).forEach(function(k){
+  var t=wt[k];
+  if(!t||!t.startedAt||!t.endedAt)return;
+  var ms=new Date(t.endedAt)-new Date(t.startedAt);
+  if(isNaN(ms)||ms<=0)return;
+  out.push({date:k,startedAt:t.startedAt,endedAt:t.endedAt,duration:Math.round(ms/60000)});
+ });
+ return out.sort(function(a,b){return b.date.localeCompare(a.date);});
+}
+
+// Promedio de duración por sesión en los últimos N días (en minutos)
+function dailyAvgDuration(wt,days){
+ var cutoff=new Date();cutoff.setDate(cutoff.getDate()-days);
+ var cutoffKey=dk(cutoff);
+ var sessions=getSessionsWithTime(wt).filter(function(s){return s.date>=cutoffKey;});
+ if(!sessions.length)return 0;
+ var total=sessions.reduce(function(a,s){return a+s.duration;},0);
+ return Math.round(total/sessions.length);
+}
+
+// Promedio semanal de tiempo total en gym (en minutos) — últimas N semanas
+function weeklyAvgDuration(wt,weeks){
+ if(!weeks||weeks<1)return 0;
+ var now=new Date();var dow=(now.getDay()||7)-1;
+ var total=0;
+ for(var i=0;i<weeks;i++){
+  var ws=new Date(now);ws.setDate(now.getDate()-dow-i*7);
+  var we=new Date(ws);we.setDate(we.getDate()+7);
+  var weekSessions=getSessionsWithTime(wt).filter(function(s){
+   var d=new Date(s.date+'T12:00:00');
+   return d>=ws&&d<we;
+  });
+  total+=weekSessions.reduce(function(a,s){return a+s.duration;},0);
+ }
+ return Math.round(total/weeks);
+}
+
+// Tiempo total acumulado en minutos
+function totalGymTime(wt){
+ return getSessionsWithTime(wt).reduce(function(a,s){return a+s.duration;},0);
+}
+
+// Formatea minutos a "Xh Ymin" o "Xmin"
+function fmtDuration(min){
+ if(!min||min<=0)return'0min';
+ if(min<60)return min+'min';
+ var h=Math.floor(min/60);var m=min%60;
+ return h+'h '+(m?m+'min':'');
+}
+
 function genRecs(data){
  var w=data.workouts;
  var dates=Object.keys(w).filter(function(d){return w[d].length>0;}).sort();

@@ -90,6 +90,67 @@ function rProg(){
   '<div class="sc"><div class="sv2">'+ws.exs+'</div><div class="sl2">Ejercicios</div>'+delt(ws.exs,ws.lExs)+'</div>'+
   '</div>'+
 
+  /* ── TIEMPO EN GIMNASIO ── */
+  (function(){
+   var wt=data.workoutTimes||{};
+   var todayK=dk(new Date());
+   var todayT=wt[todayK];
+   var todayDur=todayT&&todayT.startedAt&&todayT.endedAt?sessionDurationMin(todayK,wt):0;
+   var todayActive=todayDur>0;
+   var daily30=dailyAvgDuration(wt,30);
+   var weekly4=weeklyAvgDuration(wt,4);
+   var totalT=totalGymTime(wt);
+   var sessionsT=getSessionsWithTime(wt);
+   var recentSess=sessionsT.slice(0,5);
+   function timeShort(iso){try{var d=new Date(iso);return d.toLocaleTimeString('es-ES',{hour:'2-digit',minute:'2-digit'});}catch(e){return'--:--';}}
+   var todayCard=todayActive?
+    '<div style="background:linear-gradient(135deg,#1a0808 0%,#0c0c0c 100%);border:1px solid #2a1010;border-radius:14px;padding:14px;margin-bottom:12px">'+
+     '<div style="display:flex;justify-content:space-between;align-items:center">'+
+      '<div>'+
+       '<div style="font-size:10px;color:#aa1818;text-transform:uppercase;letter-spacing:1.2px;font-weight:700;margin-bottom:4px">⏱️ SESIÓN DE HOY</div>'+
+       '<div style="font-family:\'Barlow Condensed\',sans-serif;font-weight:900;font-size:28px;color:#fff;letter-spacing:1px">'+fmtDuration(todayDur)+'</div>'+
+      '</div>'+
+      '<div style="text-align:right;font-size:11px;color:#888;line-height:1.5">'+
+       '<div>🟢 Inicio: <span style="color:#fff;font-weight:700">'+timeShort(todayT.startedAt)+'</span></div>'+
+       '<div>🔴 Última: <span style="color:#fff;font-weight:700">'+timeShort(todayT.endedAt)+'</span></div>'+
+      '</div>'+
+     '</div>'+
+    '</div>'
+    :'';
+   var statsRow=
+    '<div class="sg">'+
+     '<div class="sc"><div class="sv2">'+fmtDuration(daily30)+'</div><div class="sl2">Prom. diario · 30d</div></div>'+
+     '<div class="sc"><div class="sv2">'+fmtDuration(weekly4)+'</div><div class="sl2">Prom. semanal · 4sem</div></div>'+
+     '<div class="sc"><div class="sv2">'+fmtDuration(totalT)+'</div><div class="sl2">Total acumulado</div></div>'+
+    '</div>';
+   var sessList=recentSess.length?
+    '<div style="margin-top:10px">'+
+     recentSess.map(function(s,i){
+      return '<div style="display:flex;justify-content:space-between;align-items:center;padding:9px 11px;background:#181818;border-radius:9px;margin-bottom:5px">'+
+       '<div style="display:flex;align-items:center;gap:8px">'+
+        '<div style="width:22px;height:22px;border-radius:50%;background:'+(i===0?'#FF3B3B':'#2a2a2a')+';color:#fff;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:800">'+(i+1)+'</div>'+
+        '<div>'+
+         '<div style="font-size:12px;color:#e2e2e2;font-weight:600">'+fmtS(s.date)+'</div>'+
+         '<div style="font-size:10px;color:#555">'+timeShort(s.startedAt)+' → '+timeShort(s.endedAt)+'</div>'+
+        '</div>'+
+       '</div>'+
+       '<div style="font-family:\'Barlow Condensed\',sans-serif;font-weight:800;font-size:15px;color:'+(i===0?'#FF3B3B':'#999')+'">'+fmtDuration(s.duration)+'</div>'+
+      '</div>';
+     }).join('')+
+    '</div>'
+    :'';
+   var emptyMsg=sessionsT.length===0?
+    '<div style="font-size:11px;color:#444;text-align:center;padding:14px;background:#101010;border-radius:10px;border:1px dashed #222">'+
+     'Marca alguna serie como hecha y se empezará a contar tu tiempo en el gym automáticamente.'+
+    '</div>'
+    :'';
+   return (
+    '<div class="p-label">Tiempo en el gym</div>'+
+    todayCard+
+    (sessionsT.length?statsRow+sessList:emptyMsg)
+   );
+  })()+
+
   /* ── METAS ── */
   '<div class="card" style="margin-bottom:10px"><div class="ct">Meta semanal</div>'+
   '<div class="goal-row"><div class="goal-info"><div class="goal-name">Sesiones: '+ws.se+' / '+(goals.weeklySessions||4)+'</div><div class="goal-bar"><div class="goal-fill" style="width:'+goalSePct+'%;background:'+(goalSePct>=100?'#4CAF50':'#FF3B3B')+'"></div></div></div><div class="goal-pct" style="color:'+(goalSePct>=100?'#4CAF50':'#FF3B3B')+'">'+goalSePct+'%</div></div>'+

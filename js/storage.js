@@ -11,7 +11,7 @@ function fmtS(s){var d=new Date(s+'T12:00:00');return d.toLocaleDateString('es-E
 function e1rm(w,r){if(r<=1)return w;return Math.round(w*(1+r/30));}
 
 function defaultData(){
- return {workouts:{},templates:[],customExercises:[],bodyWeight:[],workoutNotes:{},goals:{weeklySessions:4,customGoals:[]},reminders:{enabled:false,days:[0,1,2,3,4],time:'18:00'},settings:{weightUnit:'kg'}};
+ return {workouts:{},workoutTimes:{},templates:[],customExercises:[],bodyWeight:[],workoutNotes:{},goals:{weeklySessions:4,customGoals:[]},reminders:{enabled:false,days:[0,1,2,3,4],time:'18:00'},settings:{weightUnit:'kg'},dismissedRoutinePrompts:{}};
 }
 
 // ══ STATE ══
@@ -23,7 +23,7 @@ var S={
  pf:{q:'',muscle:'Todos'},
  toast:null,tt:null,
  quoteIdx:Math.floor(Math.random()*QUOTES.length),
- tplDraft:{id:null,name:'',color:'#FF3B3B',exercises:[]},
+ tplDraft:{id:null,name:'',color:'#FF3B3B',exercises:[],days:[]},
  expandedEx: {}, // Para manejar los ejercicios que se colapsan/expanden
  collapsedMuscle: {} // Para colapsar/expandir grupos de músculo
 };
@@ -35,10 +35,12 @@ var S={
   if(!S.data.customExercises)S.data.customExercises=[];
   if(!S.data.bodyWeight)S.data.bodyWeight=[];
   if(!S.data.workoutNotes)S.data.workoutNotes={};
+  if(!S.data.workoutTimes)S.data.workoutTimes={};
   if(!S.data.goals)S.data.goals={weeklySessions:4,customGoals:[]};
   if(!S.data.goals.customGoals)S.data.goals.customGoals=[];
   if(!S.data.reminders)S.data.reminders={enabled:false,days:[0,1,2,3,4],time:'18:00'};
   if(!S.data.settings)S.data.settings={weightUnit:'kg'};
+  if(!S.data.dismissedRoutinePrompts)S.data.dismissedRoutinePrompts={};
  } else {
   S.data=defaultData();sv(S.data);
  }

@@ -38,7 +38,7 @@ window.saveTpl=function(){
   if(!Array.isArray(e.sets))e.sets=[];
   return e;
  });
- var t={id:draft.id||uid(),name:currentName,color:draft.color,exercises:exercises};
+ var t={id:draft.id||uid(),name:currentName,color:draft.color,exercises:exercises,days:(draft.days||[]).slice().sort()};
  var d=cd();
  if(draft.id){d.templates=d.templates.map(function(x){return x.id===t.id?t:x;});}
  else{d.templates=d.templates.concat([t]);}

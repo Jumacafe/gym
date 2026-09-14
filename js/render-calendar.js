@@ -90,6 +90,32 @@ function rCal(workout){
   '<button class="bp" onclick="oM(\'picker\',{ctx:\'calendar\'})">'+IC.plus+'</button>'+
   '</div></div>'+
   exH+
+  (function(){
+   var tpl=templatesForDate(sel,S.data.templates||[]);
+   if(!tpl.length||workout.length>0)return'';
+   if((S.data.dismissedRoutinePrompts||{})[sel])return'';
+   var t=tpl[0];
+   var extras=tpl.slice(1);
+   var extrasH=extras.length?
+    '<div style="font-size:10px;color:#777;margin-top:7px;line-height:1.5">o aplicar: '+extras.map(function(x){return '<span style="color:#aaa">'+x.name+'</span>';}).join(' · ')+'</div>'
+    :'';
+   var clr=t.color||'#FF3B3B';
+   return '<div style="background:linear-gradient(135deg,#1a0a0a 0%,#0c0c0c 60%);border:1px solid #3a1818;border-left:4px solid '+clr+';border-radius:12px;padding:14px 14px;margin-bottom:14px;animation:slideUp .35s ease">'+
+    '<div style="display:flex;align-items:center;gap:10px">'+
+     '<div style="font-size:28px;line-height:1">💪</div>'+
+     '<div style="flex:1">'+
+      '<div style="font-size:10px;color:#aa1818;text-transform:uppercase;letter-spacing:1.5px;font-weight:700;margin-bottom:4px">📅 RUTINA DE HOY</div>'+
+      '<div style="font-family:\'Barlow Condensed\',sans-serif;font-weight:900;font-size:21px;color:#fff;letter-spacing:.5px;line-height:1.1">'+t.name+'</div>'+
+      '<div style="font-size:11px;color:#888;margin-top:3px">'+t.exercises.length+' ejercicios configurados para este día</div>'+
+      extrasH+
+     '</div>'+
+    '</div>'+
+    '<div style="display:flex;gap:6px;margin-top:12px">'+
+     '<button class="bp" style="flex:1;justify-content:center;padding:11px" onclick="applyTFromCal(\''+t.id+'\')">'+IC.check+' Aplicar rutina</button>'+
+     '<button class="bs" style="padding:11px" onclick="dismissRutinaPrompt(\''+sel+'\')">Más tarde</button>'+
+    '</div>'+
+   '</div>';
+  })()+
   '<div style="height:1px;background:#1e1e1e;margin:20px 0 14px"></div>'+
   '<div style="font-family:\'Barlow Condensed\',sans-serif;font-weight:800;font-size:20px;color:#fff;letter-spacing:1px;margin-bottom:4px">Mis Rutinas</div>'+
   '<div style="font-size:11px;color:#555;margin-bottom:12px">Plantillas para aplicar rapidamente</div>'+
@@ -124,13 +150,17 @@ function rExCard(ex){
   ex.sets.forEach(function(s,i){
    var thisRM=e1rm(s.weight||0,s.reps||1);
    var isPR=s.done&&allTimeRM>0&&thisRM>=allTimeRM;
+   var sug=getSmartSuggestion(ex.name,i,S.data.workouts);
    rows+='<div class="sr'+(s.done?' done':'')+'" style="grid-template-columns:28px 1fr 1fr 34px 30px">'+
     '<span class="sn">'+(i+1)+'</span>'+
     '<div style="position:relative">'+
     '<input class="set-inp" id="sw-'+ex.id+'-'+i+'" type="text" inputmode="decimal" value="'+(s.weight||0)+'" onchange="updateSetW(\''+ex.id+'\','+i+',this.value)"/>'+
     (isPR?'<span class="pr-badge" style="position:absolute;top:-6px;right:-2px;z-index:1">PR</span>':'')+
     '</div>'+
-    '<input class="set-inp" id="sr-'+ex.id+'-'+i+'" type="number" inputmode="numeric" min="0" value="'+(s.reps||0)+'" onchange="updateSetR(\''+ex.id+'\','+i+',this.value)"/>'+
+    '<div style="position:relative">'+
+    '<input class="set-inp" id="sr-'+ex.id+'-'+i+'" type="number" inputmode="numeric" min="0" value="'+(s.reps||0)+'"'+(sug?' placeholder="'+sug.reps+'"':'')+' onchange="updateSetR(\''+ex.id+'\','+i+',this.value)"/>'+
+    (sug?'<button class="sug-chip" onclick="applySuggestion(\''+ex.id+'\','+i+','+sug.weight+','+sug.reps+')" title="Sem. pasada: '+sug.weight+'kg × '+sug.reps+' reps — click para aplicar">'+sug.reps+'</button>':'')+
+    '</div>'+
     '<button class="ck'+(s.done?' done':'')+'" onclick="togSet(\''+ex.id+'\','+i+')">'+(s.done?IC.check:'')+'</button>'+
     '<button class="bism" style="color:#FF3B3B;padding:3px" onclick="removeSetFromEx(\''+ex.id+'\','+i+')">'+IC.trash+'</button>'+
     '</div>';
@@ -162,9 +192,19 @@ function rTplsInline(){
   :S.data.templates.map(function(t){
    var clr=t.color||'#FF3B3B';
    var tags=t.exercises.map(function(e){return '<span class="etag" style="border-color:'+clr+';color:'+clr+'">'+e.name+'</span>';}).join('');
+   var tDays=t.days||[];
+   var daysH='';
+   if(tDays.length){
+    var sortedDays=tDays.slice().sort(function(a,b){return a-b;});
+    var dayLabels=sortedDays.map(function(jsDay){return DAYS_LBL[jsDayToDispIdx(jsDay)];});
+    daysH='<div style="display:flex;gap:3px;margin-top:6px;flex-wrap:wrap;align-items:center">'+
+     '<span style="font-size:9px;color:#555;text-transform:uppercase;letter-spacing:.5px;margin-right:3px">Días:</span>'+
+     sortedDays.map(function(jsDay){var lbl=DAYS_LBL[jsDayToDispIdx(jsDay)];return '<span style="font-size:10px;font-weight:800;color:#fff;background:'+clr+';padding:2px 6px;border-radius:5px;letter-spacing:.3px;font-family:\'Barlow Condensed\',sans-serif">'+lbl+'</span>';}).join('')+
+     '</div>';
+   }
    return '<div class="tc" style="border-left:4px solid '+clr+'">'+
     '<div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:8px">'+
-    '<div><div class="tn">'+t.name+'</div><div class="tm">'+t.exercises.length+' ejercicios</div></div>'+
+    '<div style="flex:1"><div class="tn">'+t.name+'</div><div class="tm">'+t.exercises.length+' ejercicios</div>'+daysH+'</div>'+
     '<div style="display:flex;gap:5px">'+
     '<button class="bp" style="padding:5px 10px;font-size:11px" onclick="applyTFromCal(\''+t.id+'\')">'+IC.check+' Aplicar</button>'+
     '<button class="bism" onclick="oM(\'editTpl\',\''+t.id+'\')">'+IC.edit+'</button>'+

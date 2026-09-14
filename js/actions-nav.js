@@ -18,11 +18,11 @@ window.oM=function(type,extra){
  var extraObj=(extra&&typeof extra==='object')?extra:{};
  var p=Object.assign({type:type},extraObj);
  if(type==='picker'){window._ctx=extraObj;window._cs=[{w:'',r:''},{w:'',r:''},{w:'',r:''}];}
- if(type==='newTpl'){S.tplDraft={id:null,name:'',color:'#FF3B3B',exercises:[],_activeSets:{}};}
+ if(type==='newTpl'){S.tplDraft={id:null,name:'',color:'#FF3B3B',exercises:[],days:[],_activeSets:{}};}
  if(type==='editTpl'){
   var tplId=typeof extra==='string'?extra:(extraObj.id||'');
   var t=S.data.templates.filter(function(x){return x.id===tplId;})[0];
-  if(t)S.tplDraft=JSON.parse(JSON.stringify({id:t.id,name:t.name,color:t.color,exercises:t.exercises,_activeSets:{}}));
+  if(t)S.tplDraft=JSON.parse(JSON.stringify({id:t.id,name:t.name,color:t.color,exercises:t.exercises,days:t.days||[],_activeSets:{}}));
   p.id=tplId;
  }
  st({modal:p});

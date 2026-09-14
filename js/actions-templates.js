@@ -4,6 +4,22 @@ window.draftColor=function(c){
  S.tplDraft.color=c;
  document.querySelectorAll('.cdd').forEach(function(b){b.classList.toggle('on',b.style.background===c);});
 };
+// Toggle día de la semana en la rutina en edición (idx: 0=Lun..6=Dom)
+window.toggleTplDay=function(idx){
+ var jsDay=dispIdxToJsDay(idx);
+ S.tplDraft.days=S.tplDraft.days||[];
+ var i=S.tplDraft.days.indexOf(jsDay);
+ if(i>=0)S.tplDraft.days.splice(i,1);
+ else S.tplDraft.days.push(jsDay);
+ render();
+};
+// Dismiss prompt de rutina para un día concreto
+window.dismissRutinaPrompt=function(dateKey){
+ var d=cd();
+ d.dismissedRoutinePrompts=d.dismissedRoutinePrompts||{};
+ d.dismissedRoutinePrompts[dateKey]=true;
+ st({data:d});
+};
 window.draftExSetField=function(exIdx,setIdx,f,v){
  var ex=S.tplDraft.exercises[exIdx];if(!ex)return;
  if(!Array.isArray(ex.sets))ex.sets=[{weight:ex.weight||0,reps:ex.reps||10}];
