@@ -553,42 +553,5 @@ window.setRemTime=function(v){
  window.setupReminders();
  tst('Hora actualizada: '+v);
 };
-window.exportData=function(){
- try{
-  var blob=new Blob([JSON.stringify(S.data,null,2)],{type:'application/json'});
-  var url=URL.createObjectURL(blob);
-  var a=document.createElement('a');
-  a.href=url;a.download='ironlog-backup-'+dk(new Date())+'.json';
-  a.click();URL.revokeObjectURL(url);tst('✅ Datos exportados');
- }catch(e){tst('Error al exportar');}
-};
-window.importData=function(){
- var inp=document.createElement('input');
- inp.type='file';inp.accept='.json,application/json';
- inp.onchange=function(ev){
-  var file=ev.target.files[0];
-  if(!file){return;}
-  var reader=new FileReader();
-  reader.onload=function(e){
-   try{
-    var parsed=JSON.parse(e.target.result);
-    if(typeof parsed!=='object'||!parsed.workouts){tst('❌ Archivo inválido: no parece un backup de IronLog');return;}
-    var def=defaultData();
-    if(!parsed.customExercises)parsed.customExercises=def.customExercises;
-    if(!parsed.bodyWeight)parsed.bodyWeight=def.bodyWeight;
-    if(!parsed.workoutNotes)parsed.workoutNotes=def.workoutNotes;
-    if(!parsed.goals)parsed.goals=def.goals;
-    if(!parsed.goals.customGoals)parsed.goals.customGoals=[];
-    if(!parsed.reminders)parsed.reminders=def.reminders;
-    if(!parsed.settings)parsed.settings=def.settings;
-    if(!parsed.templates)parsed.templates=[];
-    sv(parsed);S.data=parsed;
-    st({data:parsed,modal:null});
-    tst('✅ Datos importados correctamente');
-   }catch(err){tst('❌ Error al leer el archivo: '+err.message);}
-  };
-  reader.readAsText(file);
- };
- inp.click();
-};
+// exportData/importData are defined in actions-settings.js with gzip support
 

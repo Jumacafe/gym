@@ -182,37 +182,88 @@ window.setRemTime=function(v){
 };
 window.exportData=function(){
  try{
-  var blob=new Blob([JSON.stringify(S.data,null,2)],{type:'application/json'});
-  var url=URL.createObjectURL(blob);
-  var a=document.createElement('a');
-  a.href=url;a.download='ironlog-backup-'+dk(new Date())+'.json';
-  a.click();URL.revokeObjectURL(url);tst('✅ Datos exportados');
- }catch(e){tst('Error al exportar');}
+  var compact=pack(S.data);
+  var json=JSON.stringify(compact);
+  // Try gzip via CompressionStream; fallback to plain JSON
+  if(typeof CompressionStream!=='undefined'){
+   (async function(){
+    try{
+     var stream=new Blob([json]).stream().pipeThrough(new CompressionStream('gzip'));
+     var buffer=await new Response(stream).arrayBuffer();
+     var bytes=new Uint8Array(buffer);
+     var bin='';
+     for(var i=0;i<bytes.length;i++)bin+=String.fromCharCode(bytes[i]);
+     var b64=btoa(bin);
+     var blob=new Blob(['gz:'+b64],{type:'application/octet-stream'});
+     var url=URL.createObjectURL(blob);
+     var a=document.createElement('a');
+     a.href=url;a.download='ironlog-backup-'+dk(new Date())+'.json.gz';
+     a.click();URL.revokeObjectURL(url);
+     tst('✅ Datos exportados (compactos + gzip)');
+    }catch(ge){
+     // fallback plain
+     var blob=new Blob([json],{type:'application/json'});
+     var url=URL.createObjectURL(blob);
+     var a=document.createElement('a');
+     a.href=url;a.download='ironlog-backup-'+dk(new Date())+'.json';
+     a.click();URL.revokeObjectURL(url);
+     tst('✅ Datos exportados');
+    }
+   })();
+  } else {
+   var blob=new Blob([json],{type:'application/json'});
+   var url=URL.createObjectURL(blob);
+   var a=document.createElement('a');
+   a.href=url;a.download='ironlog-backup-'+dk(new Date())+'.json';
+   a.click();URL.revokeObjectURL(url);
+   tst('✅ Datos exportados');
+  }
+ }catch(e){tst('Error al exportar');console.error(e);}
 };
 window.importData=function(){
  var inp=document.createElement('input');
- inp.type='file';inp.accept='.json,application/json';
+ inp.type='file';inp.accept='.json,.gz,application/json,application/octet-stream';
  inp.onchange=function(ev){
   var file=ev.target.files[0];
   if(!file){return;}
   var reader=new FileReader();
   reader.onload=function(e){
-   try{
-    var parsed=JSON.parse(e.target.result);
-    if(typeof parsed!=='object'||!parsed.workouts){tst('❌ Archivo inválido: no parece un backup de IronLog');return;}
-    var def=defaultData();
-    if(!parsed.customExercises)parsed.customExercises=def.customExercises;
-    if(!parsed.bodyWeight)parsed.bodyWeight=def.bodyWeight;
-    if(!parsed.workoutNotes)parsed.workoutNotes=def.workoutNotes;
-    if(!parsed.goals)parsed.goals=def.goals;
-    if(!parsed.goals.customGoals)parsed.goals.customGoals=[];
-    if(!parsed.reminders)parsed.reminders=def.reminders;
-    if(!parsed.settings)parsed.settings=def.settings;
-    if(!parsed.templates)parsed.templates=[];
-    sv(parsed);S.data=parsed;
-    st({data:parsed,modal:null});
-    tst('✅ Datos importados correctamente');
-   }catch(err){tst('❌ Error al leer el archivo: '+err.message);}
+   (async function(){
+    try{
+     var text=e.target.result;
+     var parsed;
+     // Detect gzipped
+     if(text.startsWith && text.startsWith('gz:')){
+      try{
+       var b64=text.slice(3);
+       var bin=atob(b64);
+       var bytes=new Uint8Array(bin.length);
+       for(var i=0;i<bin.length;i++)bytes[i]=bin.charCodeAt(i);
+       var stream=new Blob([bytes]).stream().pipeThrough(new DecompressionStream('gzip'));
+       var json=await new Response(stream).text();
+       parsed=JSON.parse(json);
+      }catch(de){tst('❌ Error descomprimiendo gzip');return;}
+     } else {
+      parsed=JSON.parse(text);
+     }
+     if(typeof parsed!=='object'||!parsed.workouts){tst('❌ Archivo inválido: no parece un backup de IronLog');return;}
+     // Convert compact -> long if needed
+     var longData=isOldFormat(parsed)?parsed:unpack(parsed);
+     var def=defaultData();
+     if(!longData.customExercises)longData.customExercises=def.customExercises;
+     if(!longData.bodyWeight)longData.bodyWeight=def.bodyWeight;
+     if(!longData.workoutNotes)longData.workoutNotes=def.workoutNotes;
+     if(!longData.workoutTimes)longData.workoutTimes={};
+     if(!longData.goals)longData.goals=def.goals;
+     if(!longData.goals.customGoals)longData.goals.customGoals=[];
+     if(!longData.reminders)longData.reminders=def.reminders;
+     if(!longData.settings)longData.settings=def.settings;
+     if(!longData.templates)longData.templates=[];
+     sv(longData);S.data=longData;
+     st({data:longData,modal:null});
+     tst('✅ Datos importados correctamente');
+    }catch(err){tst('❌ Error al leer el archivo: '+err.message);console.error(err);}
+   })();
   };
   reader.readAsText(file);
  };

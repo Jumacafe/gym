@@ -106,57 +106,80 @@ function gdriveFindBackup(token){
  }).then(function(r){return r.json();}).then(function(d){return d.files&&d.files.length?d.files[0]:null;});
 }
 
-// Genera el contenido del backup (incluye timestamp dentro del archivo para trazabilidad)
-function buildBackupPayload(){
- return Object.assign({},S.data,{
+// Genera el contenido del backup en formato COMPACTO + gzip (incluye timestamp)
+async function buildBackupPayload(){
+ var compact=pack(S.data);
+ var json=JSON.stringify(Object.assign({},compact,{
   _backupMeta:{
    date:new Date().toISOString(),
    version:1,
    app:'IronLog',
-   device:navigator.userAgent.substring(0,80)
+   device:(navigator.userAgent||'').substring(0,80)
   }
- });
+ }));
+ // Si hay CompressionStream disponible, gzip
+ if(typeof CompressionStream!=='undefined'){
+  try{
+   var stream=new Blob([json]).stream().pipeThrough(new CompressionStream('gzip'));
+   var buffer=await new Response(stream).arrayBuffer();
+   return {body:'gz:'+arrayBufferToBase64(buffer),gzip:true,rawSize:json.length,finalSize:buffer.byteLength};
+  }catch(e){console.warn('gzip failed, fallback plain',e);}
+ }
+ return {body:json,gzip:false,rawSize:json.length,finalSize:json.length};
+}
+
+function arrayBufferToBase64(buffer){
+ var bytes=new Uint8Array(buffer);
+ var bin='';
+ for(var i=0;i<bytes.length;i++)bin+=String.fromCharCode(bytes[i]);
+ return btoa(bin);
 }
 
 // Backup principal: SIEMPRE sobrescribe. Nunca crea archivo nuevo.
 window.gdriveBackupNow=function(manual){
  return ensureToken().then(function(token){
-  var payload=buildBackupPayload();
-  var body=JSON.stringify(payload);
-  return gdriveFindBackup(token).then(function(existing){
-   if(existing){
-    // Sobrescribir archivo existente (PATCH con mismo nombre SIEMPRE mantiene id)
-    return fetch(DRIVE_UPLOAD_API+'/'+existing.id,{
-     method:'PATCH',
-     headers:{Authorization:'Bearer '+token,'Content-Type':BACKUP_MIME},
-     body:body
-    }).then(function(r){
-     if(!r.ok)throw new Error('PATCH fallo: '+r.status);
-     return r.json();
-    });
-   }else{
-    // Crear nuevo (primera vez)
-    var meta={name:BACKUP_FILENAME,parents:['appDataFolder'],mimeType:BACKUP_MIME};
-    var form=new FormData();
-    form.append('metadata',new Blob([JSON.stringify(meta)],{type:'application/json'}));
-    form.append('file',new Blob([body],{type:BACKUP_MIME}));
-    return fetch(DRIVE_UPLOAD_API+'?uploadType=multipart&fields=id,name',{
-     method:'POST',
-     headers:{Authorization:'Bearer '+token},
-     body:form
-    }).then(function(r){
-     if(!r.ok)throw new Error('POST fallo: '+r.status);
-     return r.json();
-    });
-   }
-  }).then(function(file){
-   var d=cd();
-   d.lastBackupDate=Date.now();
-   d.googleAuth=d.googleAuth||{};
-   d.googleAuth.lastFileId=file.id;
-   st({data:d});
-   if(manual)tst('☁️ Backup guardado · '+(Math.round(body.length/1024))+'KB');
-   return file;
+  return buildBackupPayload().then(function(payload){
+   var body=payload.body;
+   var mime=payload.gzip?'application/octet-stream':BACKUP_MIME;
+   return gdriveFindBackup(token).then(function(existing){
+    if(existing){
+     // Sobrescribir archivo existente (PATCH con mismo nombre SIEMPRE mantiene id)
+     return fetch(DRIVE_UPLOAD_API+'/'+existing.id,{
+      method:'PATCH',
+      headers:{Authorization:'Bearer '+token,'Content-Type':mime},
+      body:body
+     }).then(function(r){
+      if(!r.ok)throw new Error('PATCH fallo: '+r.status);
+      return r.json();
+     });
+    }else{
+     // Crear nuevo (primera vez)
+     var meta={name:BACKUP_FILENAME,parents:['appDataFolder'],mimeType:mime};
+     var form=new FormData();
+     form.append('metadata',new Blob([JSON.stringify(meta)],{type:'application/json'}));
+     form.append('file',new Blob([body],{type:mime}));
+     return fetch(DRIVE_UPLOAD_API+'?uploadType=multipart&fields=id,name',{
+      method:'POST',
+      headers:{Authorization:'Bearer '+token},
+      body:form
+     }).then(function(r){
+      if(!r.ok)throw new Error('POST fallo: '+r.status);
+      return r.json();
+     });
+    }
+   }).then(function(file){
+    var d=cd();
+    d.lastBackupDate=Date.now();
+    d.googleAuth=d.googleAuth||{};
+    d.googleAuth.lastFileId=file.id;
+    st({data:d});
+    if(manual){
+     var sizeKB=Math.round(payload.finalSize/1024);
+     var pct=payload.gzip?Math.round(100*(1-payload.finalSize/payload.rawSize)):0;
+     tst('☁️ Backup guardado · '+sizeKB+'KB'+(pct?' ('+pct+'% más chico)':''));
+    }
+    return file;
+   });
   });
  });
 };
