@@ -97,10 +97,8 @@ window.addSetToEx=function(exId){
  var d=cd();
  d.workouts[S.sel]=(d.workouts[S.sel]||[]).map(function(ex){
   if(ex.id!==exId)return ex;
-  // Auto-fill desde el último set de TRABAJO (ignora warmups)
-  var workSets=(ex.sets||[]).filter(function(s){return!s.warmUp;});
-  var last=workSets.length?workSets[workSets.length-1]:{weight:0,reps:0};
-  return Object.assign({},ex,{sets:(ex.sets||[]).concat([{weight:last.weight||0,reps:last.reps||0,done:false,rir:undefined}])});
+  var last=(ex.sets||[]).length?(ex.sets[ex.sets.length-1]):{weight:0,reps:0};
+  return Object.assign({},ex,{sets:(ex.sets||[]).concat([{weight:last.weight||0,reps:last.reps||0,done:false}])});
  });
  sv(d);S.data=d;st({data:d});
 };
@@ -109,10 +107,8 @@ window.duplicateLastSet=function(exId){
  var d=cd();
  d.workouts[S.sel]=(d.workouts[S.sel]||[]).map(function(ex){
   if(ex.id!==exId)return ex;
-  var workSets=(ex.sets||[]).filter(function(s){return!s.warmUp;});
-  if(workSets.length<2)return ex;
-  var prev=workSets[workSets.length-2];
-  var last=workSets[workSets.length-1];
+  if((ex.sets||[]).length<2)return ex;
+  var prev=ex.sets[ex.sets.length-2];
   return Object.assign({},ex,{sets:ex.sets.map(function(s,i){
    if(i!==ex.sets.length-1)return s;
    return Object.assign({},s,{weight:prev.weight,reps:prev.reps});
@@ -121,40 +117,50 @@ window.duplicateLastSet=function(exId){
  sv(d);S.data=d;st({data:d});
  tst('↩ Copiado del set anterior');
 };
-// Agrega series de calentamiento automáticas
-window.addWarmupSets=function(exId){
- var d=cd();
- d.workouts[S.sel]=(d.workouts[S.sel]||[]).map(function(ex){
-  if(ex.id!==exId)return ex;
-  var workSets=(ex.sets||[]).filter(function(s){return!s.warmUp&&s.weight>0;});
-  if(!workSets.length)return ex;
-  // Usar el peso del primer set de trabajo (suele ser el más pesado)
-  var workingWeight=workSets[0].weight||0;
-  var warmups=generateWarmups(workingWeight,ex.name);
-  if(!warmups.length)return ex;
-  // Insertar warmups ANTES de los sets de trabajo
-  return Object.assign({},ex,{sets:warmups.concat(ex.sets)});
- });
- sv(d);S.data=d;st({data:d});
- tst('🔥 Calentamiento agregado');
-};
 // Haptic feedback (vibración corta) si está disponible
 function haptic(pattern){
  try{if(navigator.vibrate&&S.data.settings&&S.data.settings.haptic!==false)navigator.vibrate(pattern||15);}catch(e){}
 }
-window.togRIR=function(exId,idx,value){
+// Marca/desmarca una serie como dropset (técnica de intensidad: bajar peso sin descanso)
+window.togDropSet=function(exId,idx){
  var d=cd();
  d.workouts[S.sel]=(d.workouts[S.sel]||[]).map(function(ex){
   if(ex.id!==exId)return ex;
   var sets=ex.sets.map(function(s,i){
    if(i!==idx)return s;
-   var newRIR=(s.rir===value)?undefined:value; // toggle off si es el mismo
-   return Object.assign({},s,{rir:newRIR});
+   return Object.assign({},s,{dropSet:!s.dropSet});
   });
   return Object.assign({},ex,{sets:sets});
  });
+ haptic(10);
  st({data:d});
 };
+// Coloca el caret al final del input al recibir foco.
+// En iOS/Android los inputs numéricos suelen abrir el teclado con el caret al inicio,
+// lo que impide borrar la cifra sin tocarla de nuevo. Esta helper lo corrige en todos
+// los inputs donde el usuario tipea peso o reps.
+function caretEnd(el){
+ try{
+  if(!el)return;
+  // Para inputs vacíos, no hacemos nada (no hay nada al final).
+  var v=el.value;
+  var len=v?v.length:0;
+  // Diferimos al próximo tick: iOS aplica el foco y el caret antes/después de forma asíncrona.
+  setTimeout(function(){
+   try{
+    el.setSelectionRange(len,len);
+    // type=number en algunos navegadores no soporta setSelectionRange; usamos tipo texto equivalente
+    if(el.type==='number'&&el.setSelectionRange){
+     try{el.setSelectionRange(len,len);}catch(e){}
+    }
+   }catch(e){}
+  },0);
+  // Reintento extra por si el teclado virtual aún no terminó de abrir.
+  setTimeout(function(){
+   try{el.setSelectionRange(len,len);}catch(e){}
+  },60);
+ }catch(e){}
+}
 window.saveMMCRating=function(exId,rating){
  var d=cd();
  if(!d.mmcRatings)d.mmcRatings={};
@@ -252,8 +258,8 @@ window.addER=function(){
  var i=c.children.length;
  var div=document.createElement('div');div.className='serr';
  div.innerHTML='<span class="sn" style="color:#FF3B3B">'+(i+1)+'</span>'+
-  '<input class="si" type="number" inputmode="decimal" min="0" value="0"/>'+
-  '<input class="si" type="number" inputmode="numeric" min="0" value="0"/>'+
+  '<input class="si" type="number" inputmode="decimal" min="0" value="0" onfocus="caretEnd(this)"/>'+
+  '<input class="si" type="number" inputmode="numeric" min="0" value="0" onfocus="caretEnd(this)"/>'+
   '<button class="bism" style="color:#FF3B3B" onclick="rmER('+i+')">'+IC.trash+'</button>';
  c.appendChild(div);
 };

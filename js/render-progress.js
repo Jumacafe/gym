@@ -78,6 +78,55 @@ function rProg(){
   '<div class="sc"><div class="sv2">'+used.length+'</div><div class="sl2">Ejercicios</div></div>'+
   '</div>'+
 
+  /* ── MAPA DE RECUPERACIÓN MUSCULAR ── */
+ (function(){
+  var rec=typeof calcRecovery==='function'?calcRecovery(data.workouts):null;
+  if(!rec)return'';
+  var hasAny=false;
+  var rows=RECOVERY_MUSCLES.map(function(m){
+   var r=rec[m]||{pct:100,fatigue:0,lastDate:null};
+   if(r.lastDate!==null)hasAny=true;
+   var color=recoveryColor(r.pct);
+   var label=recoveryLabel(r.pct,r.lastDate);
+   var barW=Math.max(8,Math.min(100,r.pct));
+   var lastTxt=r.lastDate===null?'—':(r.lastDate===0?'hoy':r.lastDate===1?'ayer':'hace '+r.lastDate+' días');
+   return '<div style="margin-bottom:9px">'+
+    '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:3px">'+
+     '<div style="display:flex;align-items:center;gap:8px">'+
+      '<span style="font-size:11px;font-weight:700;color:#e2e2e2;min-width:78px">'+m+'</span>'+
+      '<span style="font-size:9px;color:#555">'+lastTxt+'</span>'+
+     '</div>'+
+     '<span style="font-size:11px;font-weight:800;color:'+color+';min-width:34px;text-align:right">'+r.pct+'%</span>'+
+    '</div>'+
+    '<div style="display:flex;align-items:center;gap:8px">'+
+     '<div style="flex:1;height:8px;background:#1a1a1a;border-radius:4px;overflow:hidden">'+
+      '<div style="height:100%;border-radius:4px;background:'+color+';width:'+barW+'%;transition:width .4s"></div>'+
+     '</div>'+
+     '<span style="font-size:9px;color:'+color+';font-weight:700;width:78px;text-align:right;text-transform:uppercase;letter-spacing:.4px">'+label+'</span>'+
+    '</div>'+
+   '</div>';
+  }).join('');
+  var overall=Math.round(RECOVERY_MUSCLES.reduce(function(a,m){return a+(rec[m]?rec[m].pct:100);},0)/RECOVERY_MUSCLES.length);
+  var oColor=recoveryColor(overall);
+  var readyCount=RECOVERY_MUSCLES.filter(function(m){return rec[m]&&rec[m].pct>=75;}).length;
+  var readyTxt=readyCount>0?readyCount+' de '+RECOVERY_MUSCLES.length+' grupos listos para ir fuerte':'Todos los grupos fatigados: día de descanso';
+  return '<div class="p-label">Recuperación muscular</div>'+
+   '<div class="card" style="margin-bottom:14px">'+
+    '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;padding-bottom:12px;border-bottom:1px solid #1a1a1a">'+
+     '<div>'+
+      '<div style="font-size:10px;color:#666;text-transform:uppercase;letter-spacing:.5px;font-weight:700">Estado general</div>'+
+      '<div style="font-family:\'Barlow Condensed\',sans-serif;font-weight:900;font-size:30px;color:'+oColor+';line-height:1;margin-top:2px">'+overall+'%</div>'+
+     '</div>'+
+     '<div style="text-align:right;flex:1;margin-left:14px">'+
+      '<div style="font-size:11px;color:#aaa;line-height:1.4">'+readyTxt+'</div>'+
+      (hasAny?'':'<div style="font-size:10px;color:#444;margin-top:2px">Empezá a entrenar para ver el mapa</div>')+
+     '</div>'+
+    '</div>'+
+    rows+
+   '</div>'+
+   '<div class="divider"></div>';
+ })()+
+
   /* ── GRÁFICA SEMANAS ── */
   '<div class="card"><div class="ct">Sesiones/semana · últ. 8 semanas</div><div class="cw">'+svgBar(vBars,340,90,'#FF3B3B')+'</div></div>'+
   '<div class="divider"></div>'+
@@ -119,7 +168,7 @@ function rProg(){
    }).join('');
    return '<div class="p-label">Volumen semanal por músculo</div>'+
     '<div class="card" style="margin-bottom:14px">'+
-     '<div style="font-size:10px;color:#666;margin-bottom:10px;line-height:1.5">Series <strong style="color:#aaa">duras</strong> (RIR 0-3) en los últimos 7 días. Para hipertrofia apuntá a la zona MAV.'+
+     '<div style="font-size:10px;color:#666;margin-bottom:10px;line-height:1.5">Series <strong style="color:#aaa">efectivas</strong> en los últimos 7 días. Para hipertrofia apuntá a la zona MAV.'+
       '<br><span style="color:#00D084">━</span> MEV &nbsp; <span style="color:#FF8C00">━</span> MRV</div>'+
      rows+
     '</div>'+

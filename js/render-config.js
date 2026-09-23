@@ -39,6 +39,18 @@ function rConfig(){
   '<strong style="color:#555">Funciona:</strong> La app necesita estar abierta o en segundo plano para recibir la notificacion.'+
   '</div>'+
   '</div></div>'+
+  '<div class="ct" style="color:#FF3B3B;margin-bottom:6px;font-size:11px">PANTALLA</div>'+
+  '<div class="card" style="margin-bottom:14px">'+
+  '<div class="rem-row">'+
+  '<div class="rem-info"><div class="rem-title">Mantener pantalla encendida</div><div class="rem-sub">Activa el modo "no apagar" durante el entreno</div></div>'+
+  '<button class="tgl'+(settings.wakeLock!==false?' on':'')+'" onclick="toggleWakeLock()"></button>'+
+  '</div>'+
+  '<div style="margin-top:10px;padding:9px;background:#0d0d0d;border-radius:8px;font-size:11px;color:#444;line-height:1.5">'+
+  (!('wakeLock' in navigator)
+   ?'<span style="color:#FF8C00">Tu navegador no soporta Wake Lock. La pantalla se apagará normalmente.</span>'
+   :'La pantalla se mantiene encendida mientras estás en la pestaña Entreno. Si minimizás la app, se libera automáticamente.')+
+  '</div>'+
+  '</div>'+
   '<div class="ct" style="color:#FF3B3B;margin-bottom:6px;font-size:11px">TIMER DE DESCANSO</div>'+
   '<div class="card" style="margin-bottom:14px">'+
   '<div style="margin-bottom:12px">'+

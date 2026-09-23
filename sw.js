@@ -1,4 +1,4 @@
-const CACHE_NAME = 'ironlog-cache-v2';
+const CACHE_NAME = 'ironlog-cache-v3';
 const ASSETS = [
   './',
   './index.html',
@@ -18,6 +18,8 @@ const ASSETS = [
   './js/actions.js',
   './js/reminder.js',
   './js/timer.js',
+  './js/wakelock.js',
+  './js/recovery.js',
   './js/backup-google.js',
   './js/init.js',
   './assets/icon-192.png',

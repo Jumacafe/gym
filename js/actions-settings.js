@@ -122,6 +122,21 @@ window.getTimezone=function(){
   return 'America/Montevideo';
  }
 };
+// Activa/desactiva el Wake Lock (mantener pantalla encendida)
+window.toggleWakeLock=function(){
+ var d=cd();
+ d.settings=d.settings||{};
+ d.settings.wakeLock=!(d.settings.wakeLock!==false);
+ sv(d);S.data=d;
+ if(d.settings.wakeLock){
+  if(typeof window.acquireWakeLock==='function')window.acquireWakeLock();
+  tst('📱 Pantalla se mantendrá encendida');
+ }else{
+  if(typeof window.releaseWakeLock==='function')window.releaseWakeLock();
+  tst('📱 Wake lock desactivado');
+ }
+ st({data:d});
+};
 window.toggleReminder=function(){
  if(!('Notification' in window)){
   tst('⚠️ Tu navegador no soporta notificaciones');

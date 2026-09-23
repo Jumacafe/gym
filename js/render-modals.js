@@ -18,8 +18,8 @@ function rModal(modal){
   var seriesList=window._cs.map(function(x,i){
    return '<div class="series-row" style="display:grid;grid-template-columns:40px 1fr 1fr 40px;gap:8px;align-items:center;padding:12px;background:#1a1a1a;border-radius:8px;border:1px solid #2a2a2a;margin-bottom:8px">'+
     '<div style="text-align:center;font-size:11px;color:#555;font-weight:600">S'+(i+1)+'</div>'+
-    '<div><label style="display:block;font-size:9px;color:#555;margin-bottom:3px;text-transform:uppercase;letter-spacing:.5px">Kg</label><input type="text" inputmode="decimal" placeholder="0" value="'+(x.w||'')+'" oninput="_cs['+i+'].w=this.value" style="background:#0d0d0d;border:1px solid #2a2a2a;border-radius:6px;padding:6px;color:#eee;font-size:16px;width:100%;text-align:center;outline:none"/></div>'+
-    '<div><label style="display:block;font-size:9px;color:#555;margin-bottom:3px;text-transform:uppercase;letter-spacing:.5px">Reps</label><input type="number" inputmode="numeric" min="1" placeholder="0" value="'+(x.r||'')+'" oninput="_cs['+i+'].r=this.value" style="background:#0d0d0d;border:1px solid #2a2a2a;border-radius:6px;padding:6px;color:#eee;font-size:16px;width:100%;text-align:center;outline:none"/></div>'+
+    '<div><label style="display:block;font-size:9px;color:#555;margin-bottom:3px;text-transform:uppercase;letter-spacing:.5px">Kg</label><input type="text" inputmode="decimal" placeholder="0" value="'+(x.w||'')+'" oninput="_cs['+i+'].w=this.value" onfocus="caretEnd(this)" style="background:#0d0d0d;border:1px solid #2a2a2a;border-radius:6px;padding:6px;color:#eee;font-size:16px;width:100%;text-align:center;outline:none"/></div>'+
+    '<div><label style="display:block;font-size:9px;color:#555;margin-bottom:3px;text-transform:uppercase;letter-spacing:.5px">Reps</label><input type="number" inputmode="numeric" min="1" placeholder="0" value="'+(x.r||'')+'" oninput="_cs['+i+'].r=this.value" onfocus="caretEnd(this)" style="background:#0d0d0d;border:1px solid #2a2a2a;border-radius:6px;padding:6px;color:#eee;font-size:16px;width:100%;text-align:center;outline:none"/></div>'+
     '<button class="bi" onclick="rmCS('+i+')" style="color:#FF3B3B;padding:6px;justify-content:center">'+IC.trash+'</button>'+
     '</div>';
   }).join('');
@@ -33,12 +33,12 @@ function rModal(modal){
  if(modal.type==='configEx'){
   var name=modal.name,muscle=modal.muscle;
   title=name;
- 
+
   var seriesList=window._cs.map(function(x,i){
    return '<div class="series-row" style="display:grid;grid-template-columns:40px 1fr 1fr 40px;gap:8px;align-items:center;padding:12px;background:#1a1a1a;border-radius:8px;border:1px solid #2a2a2a;margin-bottom:8px">'+
     '<div style="text-align:center;font-size:11px;color:#555;font-weight:600">S'+(i+1)+'</div>'+
-    '<div><label style="display:block;font-size:9px;color:#555;margin-bottom:3px;text-transform:uppercase;letter-spacing:.5px">Kg</label><input type="text" inputmode="decimal" placeholder="0" value="'+(x.w||'')+'" oninput="_cs['+i+'].w=this.value" style="background:#0d0d0d;border:1px solid #2a2a2a;border-radius:6px;padding:6px;color:#eee;font-size:16px;width:100%;text-align:center;outline:none"/></div>'+
-    '<div><label style="display:block;font-size:9px;color:#555;margin-bottom:3px;text-transform:uppercase;letter-spacing:.5px">Reps</label><input type="number" inputmode="numeric" min="1" placeholder="0" value="'+(x.r||'')+'" oninput="_cs['+i+'].r=this.value" style="background:#0d0d0d;border:1px solid #2a2a2a;border-radius:6px;padding:6px;color:#eee;font-size:16px;width:100%;text-align:center;outline:none"/></div>'+
+    '<div><label style="display:block;font-size:9px;color:#555;margin-bottom:3px;text-transform:uppercase;letter-spacing:.5px">Kg</label><input type="text" inputmode="decimal" placeholder="0" value="'+(x.w||'')+'" oninput="_cs['+i+'].w=this.value" onfocus="caretEnd(this)" style="background:#0d0d0d;border:1px solid #2a2a2a;border-radius:6px;padding:6px;color:#eee;font-size:16px;width:100%;text-align:center;outline:none"/></div>'+
+    '<div><label style="display:block;font-size:9px;color:#555;margin-bottom:3px;text-transform:uppercase;letter-spacing:.5px">Reps</label><input type="number" inputmode="numeric" min="1" placeholder="0" value="'+(x.r||'')+'" oninput="_cs['+i+'].r=this.value" onfocus="caretEnd(this)" style="background:#0d0d0d;border:1px solid #2a2a2a;border-radius:6px;padding:6px;color:#eee;font-size:16px;width:100%;text-align:center;outline:none"/></div>'+
     '<button class="bi" onclick="rmCS('+i+')" style="color:#FF3B3B;padding:6px;justify-content:center">'+IC.trash+'</button>'+
     '</div>';
   }).join('');
@@ -61,8 +61,8 @@ function rModal(modal){
   title='Editar Ejercicio';
   var rows=ex.sets.map(function(s,i){return '<div class="serr">'+
    '<span class="sn" style="color:#FF3B3B">'+(i+1)+'</span>'+
-   '<input class="si" type="text" inputmode="decimal" value="'+(s.weight||0)+'" data-i="'+i+'" data-f="w"/>'+
-   '<input class="si" type="number" inputmode="numeric" min="0" value="'+(s.reps||0)+'" data-i="'+i+'" data-f="r"/>'+
+   '<input class="si" type="text" inputmode="decimal" value="'+(s.weight||0)+'" data-i="'+i+'" data-f="w" onfocus="caretEnd(this)"/>'+
+   '<input class="si" type="number" inputmode="numeric" min="0" value="'+(s.reps||0)+'" data-i="'+i+'" data-f="r" onfocus="caretEnd(this)"/>'+
    '<button class="bism" style="color:#FF3B3B" onclick="rmER('+i+')">'+IC.trash+'</button></div>';}).join('');
   body='<label class="il">Nombre</label><input type="text" id="ename" value="'+ex.name+'"/>'+
    '<div class="serh"><span class="sl">Serie</span><span class="sl">KG</span><span class="sl">Reps</span><span></span></div>'+

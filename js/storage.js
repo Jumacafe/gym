@@ -33,7 +33,7 @@ function isCompactFormat(p){
  return ex&&(('d' in ex)&&('s' in ex));
 }
 
-// Pack a single set into compact tuple [w, r, d, count=1, 'w'?, rir?]
+// Pack a single set into compact tuple [w, r, d, count=1, 'w'?, rir?, 'D'?]
 // Posición 3 es SIEMPRE count (default 1). setsEqual ignora esa posición.
 function packSet(s,count){
  if(!s||typeof s!=='object')return null;
@@ -42,6 +42,7 @@ function packSet(s,count){
  if(c&&c>1)arr[3]=c;
  if(s.warmUp)arr.push('w');
  if(typeof s.rir==='number'&&s.rir>=0)arr.push(s.rir);
+ if(s.dropSet)arr.push('D');
  return arr;
 }
 
@@ -54,6 +55,7 @@ function unpackSet(x){
   if(typeof x[3]==='number'&&x[3]>1)s.c=x[3];
   for(var i=4;i<x.length;i++){
    if(x[i]==='w')s.warmUp=true;
+   else if(x[i]==='D')s.dropSet=true;
    else if(typeof x[i]==='number')s.rir=x[i];
   }
   return s;
@@ -72,6 +74,7 @@ function pack(data){
  ['workoutTimes','workoutNotes','goals','reminders','settings','dismissedRoutinePrompts','injuries','mmcRatings','stagnationDismissed','googleAuth','lastBackupDate'].forEach(function(k){
   c[k]=data[k]||(k==='workoutTimes'||k==='workoutNotes'||k==='dismissedRoutinePrompts'?{}:k==='injuries'||k==='mmcRatings'||k==='stagnationDismissed'?{}:null);
  });
+ if(c.reminders&&c.reminders.streakNudges===undefined)c.reminders.streakNudges={};
  // Workouts: drop empty dates, drop name/muscle (rebuild from dbId)
  var w={};
  Object.keys(data.workouts).forEach(function(date){
@@ -178,6 +181,7 @@ function unpack(c){
  ['workoutTimes','workoutNotes','goals','reminders','settings','dismissedRoutinePrompts','injuries','mmcRatings','stagnationDismissed','googleAuth','lastBackupDate'].forEach(function(k){
   out[k]=c[k]!==undefined?c[k]:null;
  });
+ if(out.reminders&&out.reminders.streakNudges===undefined)out.reminders.streakNudges={};
  // Workouts back to long form
  var w={};
  Object.keys(c.workouts||{}).forEach(function(date){
@@ -261,7 +265,7 @@ function lookupExercise(dbId){
 }
 
 function defaultData(){
- return {workouts:{},workoutTimes:{},templates:[],customExercises:[],bodyWeight:[],workoutNotes:{},goals:{weeklySessions:4,customGoals:[]},reminders:{enabled:false,days:[0,1,2,3,4],time:'18:00'},settings:{weightUnit:'kg'},dismissedRoutinePrompts:{},injuries:[],mmcRatings:{},stagnationDismissed:{},googleAuth:null,lastBackupDate:null};
+ return {workouts:{},workoutTimes:{},templates:[],customExercises:[],bodyWeight:[],workoutNotes:{},goals:{weeklySessions:4,customGoals:[]},reminders:{enabled:false,days:[0,1,2,3,4],time:'18:00',streakNudges:{},streakHour:20},settings:{weightUnit:'kg'},dismissedRoutinePrompts:{},injuries:[],mmcRatings:{},stagnationDismissed:{},googleAuth:null,lastBackupDate:null};
 }
 
 // ══ STATE ══
@@ -288,7 +292,9 @@ var S={
   if(!S.data.workoutTimes)S.data.workoutTimes={};
   if(!S.data.goals)S.data.goals={weeklySessions:4,customGoals:[]};
   if(!S.data.goals.customGoals)S.data.goals.customGoals=[];
-  if(!S.data.reminders)S.data.reminders={enabled:false,days:[0,1,2,3,4],time:'18:00'};
+  if(!S.data.reminders)S.data.reminders={enabled:false,days:[0,1,2,3,4],time:'18:00',streakNudges:{},streakHour:20};
+ if(S.data.reminders.streakNudges===undefined)S.data.reminders.streakNudges={};
+ if(S.data.reminders.streakHour===undefined)S.data.reminders.streakHour=20;
   if(!S.data.settings)S.data.settings={weightUnit:'kg'};
   if(!S.data.dismissedRoutinePrompts)S.data.dismissedRoutinePrompts={};
   if(!S.data.injuries)S.data.injuries=[];

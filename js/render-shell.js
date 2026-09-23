@@ -49,4 +49,6 @@ if (_newContent && _savedScroll > 0) {
     }
   }
 }
+ // Wake lock: solo mantener pantalla encendida durante el entreno
+ if(typeof window.updateWakeLock==='function')window.updateWakeLock();
 }

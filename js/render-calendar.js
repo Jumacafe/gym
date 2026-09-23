@@ -121,8 +121,7 @@ function rCal(workout){
   '<div style="height:1px;background:#1e1e1e;margin:20px 0 14px"></div>'+
   '<div style="font-family:\'Barlow Condensed\',sans-serif;font-weight:800;font-size:20px;color:#fff;letter-spacing:1px;margin-bottom:4px">Mis Rutinas</div>'+
   '<div style="font-size:11px;color:#555;margin-bottom:12px">Plantillas para aplicar rapidamente</div>'+
-  rTplsInline()+
-  '<button class="fab" onclick="oM(\'picker\',{ctx:\'calendar\'})" title="Agregar ejercicio">+</button>';
+  rTplsInline();
 }
 
 function rExCard(ex){
@@ -149,52 +148,33 @@ function rExCard(ex){
  var lastRef=hist.length>=1?hist[hist.length-1]:null;
  var rows='';
  if(ex.sets.length>0){
-  rows+='<div class="sh" style="grid-template-columns:28px 1fr 1fr 34px 30px"><span class="sl">Serie</span><span class="sl">KG</span><span class="sl">Reps</span><span class="sl" style="text-align:center">\u2713</span><span></span></div>';
+  rows+='<div class="sh" style="grid-template-columns:28px 1fr 1fr 28px 34px 30px"><span class="sl">Serie</span><span class="sl">KG</span><span class="sl">Reps</span><span class="sl" style="text-align:center" title="Dropset">↓</span><span class="sl" style="text-align:center">\u2713</span><span></span></div>';
   ex.sets.forEach(function(s,i){
    var thisRM=e1rm(s.weight||0,s.reps||1);
    var isPR=s.done&&allTimeRM>0&&thisRM>=allTimeRM;
    var sug=getProgressionSuggestion(ex.name,i,S.data.workouts);
    var sugW=sug?sug.weight:0;
    var sugR=sug?sug.reps:0;
-   var isWarmUp=s.warmUp===true;
-   var rirVal=s.rir;
-   // RIR chips — solo visible cuando el set está hecho
-   var rirChips='';
-   if(s.done&&!isWarmUp){
-    rirChips='<div class="rir-row">'+
-     '<span class="rir-lbl">RIR</span>'+
-     [0,1,2,3,4,5].map(function(v){
-      var on=(rirVal===v);
-      return '<button class="rir-chip'+(on?' on':'')+'" onclick="event.stopPropagation();togRIR(\''+ex.id+'\','+i+','+v+')">'+v+'</button>';
-     }).join('')+
-     '</div>';
-   }
-   var rowStyle=isWarmUp?'opacity:.6;background:#0a0a0a;border:1px dashed #2a2a2a;border-radius:6px;margin-bottom:4px;padding:2px 4px':'';
-   var setBg=isWarmUp?'#0d0d0d':'#181818';
-   var setBorder=isWarmUp?'#222':'#232323';
-   rows+='<div class="sr'+(s.done?' done':'')+(isWarmUp?' warm':'')+'" style="grid-template-columns:28px 1fr 1fr 34px 30px;'+rowStyle+'">'+
-    '<span class="sn">'+((isWarmUp?'🔥':' ')+(i+1))+'</span>'+
+   var isDrop=!!s.dropSet;
+   rows+='<div class="sr'+(s.done?' done':'')+(isDrop?' drop':'')+'" style="grid-template-columns:28px 1fr 1fr 28px 34px 30px">'+
+    '<span class="sn">'+(i+1)+(isDrop?'<span style="color:#00D084;font-size:9px;margin-left:1px">↓</span>':'')+'</span>'+
     '<div style="position:relative">'+
-    '<input class="set-inp" id="sw-'+ex.id+'-'+i+'" type="text" inputmode="decimal" value="'+(s.weight||0)+'"'+(sug&&!isWarmUp?' placeholder="'+sugW+'"':'')+' onchange="updateSetW(\''+ex.id+'\','+i+',this.value)" style="'+(isWarmUp?'background:'+setBg+';border-color:'+setBorder:'')+'"/>'+
+    '<input class="set-inp" id="sw-'+ex.id+'-'+i+'" type="text" inputmode="decimal" value="'+(s.weight||0)+'"'+(sug?' placeholder="'+sugW+'"':'')+' onfocus="caretEnd(this)" onchange="updateSetW(\''+ex.id+'\','+i+',this.value)"/>'+
     (isPR?'<span class="pr-badge" style="position:absolute;top:-6px;right:-2px;z-index:1">PR</span>':'')+
     '</div>'+
     '<div style="position:relative">'+
-    '<input class="set-inp" id="sr-'+ex.id+'-'+i+'" type="number" inputmode="numeric" min="0" value="'+(s.reps||0)+'"'+(sug&&!isWarmUp?' placeholder="'+sugR+'"':'')+' onchange="updateSetR(\''+ex.id+'\','+i+',this.value)" style="'+(isWarmUp?'background:'+setBg+';border-color:'+setBorder:'')+'"/>'+
-    (sug&&!isWarmUp?'<button class="sug-chip sug-'+sug.type+'" onclick="applySuggestion(\''+ex.id+'\','+i+','+sug.weight+','+sug.reps+')" title="'+sug.reason+' · Click para aplicar"><span class="sug-arr">'+(sug.type==='weight_up'?'🔼':'⬆')+'</span><span class="sug-num">'+sugW+'×'+sugR+'</span></button>':'')+
+    '<input class="set-inp" id="sr-'+ex.id+'-'+i+'" type="number" inputmode="numeric" min="0" value="'+(s.reps||0)+'"'+(sug?' placeholder="'+sugR+'"':'')+' onfocus="caretEnd(this)" onchange="updateSetR(\''+ex.id+'\','+i+',this.value)"/>'+
+    (sug?'<button class="sug-chip sug-'+sug.type+'" onclick="applySuggestion(\''+ex.id+'\','+i+','+sug.weight+','+sug.reps+')" title="'+sug.reason+' · Click para aplicar"><span class="sug-arr">'+(sug.type==='weight_up'?'🔼':'⬆')+'</span><span class="sug-num">'+sugW+'×'+sugR+'</span></button>':'')+
     '</div>'+
+    '<button class="drop-btn'+(isDrop?' on':'')+'" onclick="event.stopPropagation();togDropSet(\''+ex.id+'\','+i+')" title="'+(isDrop?'Quitar dropset':'Marcar como dropset')+'">'+(isDrop?'↓':'·')+'</button>'+
     '<button class="ck'+(s.done?' done':'')+'" onclick="togSet(\''+ex.id+'\','+i+')">'+(s.done?IC.check:'')+'</button>'+
-    '<button class="bism" style="color:#FF3B3B;padding:3px" onclick="event.stopPropagation();if(confirm(\'¿Borrar esta serie?\'))removeSetFromEx(\''+ex.id+'\','+i+')">'+IC.trash+'</button>'+
-    '</div>'+
-    (rirChips?'<div style="grid-column:1 / -1;padding-left:32px;margin-bottom:4px">'+rirChips+'</div>':'');
+    '<button class="bism" style="color:#FF3B3B;padding:3px" onclick="event.stopPropagation();removeSetFromEx(\''+ex.id+'\','+i+')">'+IC.trash+'</button>'+
+    '</div>';
   });
  }
  var lastRefH=lastRef&&ex.sets.length>0?'<div style="font-size:10px;color:#3a3a3a;padding:5px 0;border-top:1px solid #1a1a1a;margin-top:6px">\u21ba \xdaltima sesi\xf3n: '+lastRef.w+'kg \xd7 '+lastRef.r+' reps (1RM ~'+lastRef.rm+'kg)</div>':'';
- var hasWorkSets=(ex.sets||[]).some(function(s){return!s.warmUp;});
- var workSetsCount=(ex.sets||[]).filter(function(s){return!s.warmUp;}).length;
  var addSetBtn='<div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:8px">'+
   '<button class="bas" style="flex:1;min-width:120px;margin:0" onclick="addSetToEx(\''+ex.id+'\')">'+IC.plus+' Agregar serie</button>'+
-  (hasWorkSets?'<button class="bs" style="font-size:11px;padding:7px 10px" onclick="addWarmupSets(\''+ex.id+'\')" title="Genera 2-4 series de calentamiento progresivo">🔥 Calentamiento</button>'+
-   '<button class="bs" style="font-size:11px;padding:7px 10px" onclick="duplicateLastSet(\''+ex.id+'\')" title="Copia el set anterior al actual">↩ Repetir</button>':'')+
   '</div>';
  var topBtns='<div style="display:flex;gap:4px;align-items:center">'+
   (allDone ? '<button class="bism" style="color:#88b888; background:#142a14; border-radius:6px; padding:4px;" onclick="togExExpand(\''+ex.id+'\')">'+IC.chevU+'</button>' : '') +
